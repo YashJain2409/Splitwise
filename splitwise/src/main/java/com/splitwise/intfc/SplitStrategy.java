@@ -7,5 +7,6 @@ import java.util.Map;
 import com.splitwise.model.User;
 
 public interface SplitStrategy {
-	Map<User,BigDecimal> calculateSplits(BigDecimal totalAmount,List<User> participants,Map<User,BigDecimal> shareMap);
+	Map<User,BigDecimal> calculateSplits(BigDecimal totalAmount, List<User> participants,
+			Map<User, BigDecimal> userPaidMap,Map<User,BigDecimal> userOwedMap);
 }

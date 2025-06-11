@@ -14,12 +14,14 @@ public class EqualSplitStrategy implements SplitStrategy {
 
 	@Override
 	public Map<User, BigDecimal> calculateSplits(BigDecimal totalAmount, List<User> participants,
-			Map<User, BigDecimal> ignored) {
+			Map<User, BigDecimal> userPaidMap,Map<User,BigDecimal> userOwedMap) {
 		int n = participants.size();
 		Map<User,BigDecimal> shares = new HashMap<>();
 		BigDecimal share = totalAmount.divide(BigDecimal.valueOf(n),2,RoundingMode.HALF_UP);
 		for(User u : participants) {
-			shares.put(u,share);
+			BigDecimal paid = userPaidMap.getOrDefault(u, BigDecimal.ZERO);
+			BigDecimal net = paid.subtract(share);
+			shares.put(u,net);
 		}
 		return shares;
 	}
