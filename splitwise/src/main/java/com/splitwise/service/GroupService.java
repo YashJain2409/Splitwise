@@ -31,7 +31,7 @@ public class GroupService {
             emails.add(a.getEmail());
         }
         List<User> users = userRepository.findByEmailIn(emails);
-        g.setUsers(users);
+//        g.setUsers(users);
         return groupRepository.save(g);
     }
 
@@ -53,7 +53,7 @@ public class GroupService {
                 emails.add(a.getEmail());
             }
             List<User> users = userRepository.findByEmailIn(emails);
-            group.setUsers(users);
+//            group.setUsers(users);
             return groupRepository.save(group);
         }
         throw new ApplicationException("0000","Group does not exist", HttpStatus.NOT_FOUND);

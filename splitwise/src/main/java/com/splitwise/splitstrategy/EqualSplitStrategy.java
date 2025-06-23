@@ -6,24 +6,34 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.stereotype.Component;
+
+import com.splitwise.dto.CreateExpenseRequest;
 import com.splitwise.intfc.SplitStrategy;
+import com.splitwise.model.Expense;
+import com.splitwise.model.Split;
 import com.splitwise.model.User;
+import com.splitwise.repository.UserRepository;
 
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 public class EqualSplitStrategy implements SplitStrategy {
-
+	
+	UserRepository userRepository;
+	
 
 	@Override
-	public Map<User, BigDecimal> calculateSplits(BigDecimal totalAmount, List<User> participants,
-			Map<User, BigDecimal> userPaidMap,Map<User,BigDecimal> userOwedMap) {
-		int n = participants.size();
-		Map<User,BigDecimal> shares = new HashMap<>();
-		BigDecimal share = totalAmount.divide(BigDecimal.valueOf(n),2,RoundingMode.HALF_UP);
-		for(User u : participants) {
-			BigDecimal paid = userPaidMap.getOrDefault(u, BigDecimal.ZERO);
-			BigDecimal net = paid.subtract(share);
-			shares.put(u,net);
-		}
-		return shares;
+	public List<Split> calculateSplits(Expense expnese,List<CreateExpenseRequest.SplitDto> splitDtos) {
+		int n = splitDtos.size();
+		BigDecimal share = expnese.getAmount().divide(BigDecimal.valueOf(n),2,RoundingMode.HALF_UP);
+		return splitDtos.stream().map(s -> {
+			Split split = new Split();
+			split.setExpense(expnese);
+			split.setAmount(share);
+			split.setUser(userRepository.findById(s.getUserId()).orElseThrow());
+			return split;
+		}).toList();
 	}
 	
 }

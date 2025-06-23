@@ -10,8 +10,8 @@ import java.util.List;
 @Repository
 public interface ExpenseRepository extends CrudRepository<Expense,Integer> {
 
-    @Query("select e from expense e where (e.createdBy=:id and e.friendUserId=:friendId) or (e.createdBy=:friendId and e.friendUserId=:id)")
-    List<Expense> getExpenseByFriendId(Integer friendId, int id);
+//    @Query("select e from expense e where (e.createdBy=:id and e.friendUserId=:friendId) or (e.createdBy=:friendId and e.friendUserId=:id)")
+//    List<Expense> getExpenseByFriendId(Integer friendId, int id);
 
-    List<Expense> findByGroupId(Integer groupId);
+//    List<Expense> findByGroupId(Integer groupId);
 }

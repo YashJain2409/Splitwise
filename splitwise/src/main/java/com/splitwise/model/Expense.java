@@ -4,8 +4,9 @@ import com.splitwise.enums.ExpenseSplitType;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -19,17 +20,22 @@ public class Expense {
     @Column(name = "description")
     private String description;
     @Column(name = "amount")
-    private double amount;
+    private BigDecimal amount;
     @Column(name = "split_type")
     @Enumerated(EnumType.STRING)
     private ExpenseSplitType expenseSplitType;
+    @ManyToOne
+    @JoinColumn(name = "group_id")
+    private Group group; 
+    @ManyToOne
+    @JoinColumn(name = "created_by")
+    private User createdBy;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+    @OneToMany(mappedBy = "expense", cascade = CascadeType.ALL)
+    private List<ExpensePayer> payers;
+    @OneToMany(mappedBy = "expense", cascade = CascadeType.ALL)
+    private List<Split> splits;
+
     
-    @OneToMany(mappedBy = "expense")
-    private List<ExpensePayer> expensePayers;
-    
-    @OneToMany(mappedBy = "expense")
-    private List<ExpenseParticipant> expenseParticipants;
-    
-    @Column(name = "created_by")
-    private int createdBy;
 }

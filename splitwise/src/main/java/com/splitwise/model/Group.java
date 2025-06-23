@@ -3,20 +3,29 @@ package com.splitwise.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@Entity(name = "friends")
+@Entity
+@Table(name = "`group`")
 public class Group {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "group_id")
     private int groupId;
 
-    @Column(name = "name")
+    @Column(name = "group_name")
     private String groupName;
+    
+    @ManyToOne
+    @JoinColumn(name = "created_by")
+    private User createdBy;
+    
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
-    @ManyToMany
-    @JoinTable(name = "user_group_map",joinColumns = @JoinColumn(name = "group_id"),inverseJoinColumns = @JoinColumn(name = "user_id"))
-    private List<User> users;
+    
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
+    private List<GroupMember> members;
 }

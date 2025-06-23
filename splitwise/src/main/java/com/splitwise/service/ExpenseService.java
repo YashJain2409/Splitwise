@@ -1,28 +1,75 @@
 package com.splitwise.service;
 
+import com.splitwise.dto.CreateExpenseRequest;
 import com.splitwise.exception.ApplicationException;
+import com.splitwise.intfc.SplitStrategy;
 import com.splitwise.model.Expense;
+import com.splitwise.model.ExpensePayer;
+import com.splitwise.model.Group;
 import com.splitwise.model.Split;
+import com.splitwise.model.User;
+import com.splitwise.registry.StrategyFactoryRegistry;
 import com.splitwise.repository.ExpenseRepository;
+import com.splitwise.repository.GroupRepository;
 import com.splitwise.repository.SplitRepository;
 import com.splitwise.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ExpenseService {
 
-    @Autowired
+
     ExpenseRepository expenseRepository;
-    @Autowired
     SplitRepository splitRepository;
-    public Expense createExpense(Expense expense) {
-        return expenseRepository.save(expense);
+    UserRepository userRepository;
+    GroupRepository groupRepository;
+    StrategyFactoryRegistry strategyFactoryRegistry;
+    
+    
+
+    public void createExpense(CreateExpenseRequest expenseReq) {
+        User createdBy = userRepository.findById(expenseReq.getCreatedByUserId()).orElseThrow();
+        
+     // Save expense
+        Expense expense = new Expense();
+        if (expenseReq.getGroupId() != null) {
+            Group group = groupRepository.findById(expenseReq.getGroupId()).orElseThrow();
+            expense.setGroup(group);
+        }
+        expense.setCreatedBy(createdBy);
+        expense.setCreatedAt(LocalDateTime.now());
+        expense.setAmount(expenseReq.getAmount());
+        expense.setDescription(expenseReq.getDescription());
+        expenseRepository.save(expense);
+        
+        // save payers
+        List<ExpensePayer> payers = expenseReq.getPayers().stream().map(p -> {
+        	ExpensePayer payer = new ExpensePayer();
+        	payer.setExpense(expense);
+        	payer.setUser(userRepository.findById(p.getUserId()).orElseThrow());
+        	payer.setAmountPaid(p.getAmountPaid());
+        	return payer;
+        }).toList();
+        
+        SplitStrategy strategy =  strategyFactoryRegistry.getStrategy(expenseReq.getSplitType());
+        List<Split> expenseSplit = strategy.calculateSplits(expense, expenseReq.getSplits()); 
+        splitRepository.saveAll(expenseSplit);
+        
+        // update group balances.
+        
+        // update global balances.
+        
     }
 
     public ResponseEntity<String> deleteExpense(int expenseId) {
@@ -35,10 +82,11 @@ public class ExpenseService {
     }
 
     public ResponseEntity<List<Expense>> getExpenseByFriendId(Integer friendId,int userId) {
-        List<Expense> expenses = expenseRepository.getExpenseByFriendId(friendId,userId);
-        if(expenses.isEmpty())
-            throw new ApplicationException("0000","No expenses found", HttpStatus.NOT_FOUND);
-        return new ResponseEntity<>(expenses,HttpStatus.OK);
+//        List<Expense> expenses = expenseRepository.getExpenseByFriendId(friendId,userId);
+//        if(expenses.isEmpty())
+//            throw new ApplicationException("0000","No expenses found", HttpStatus.NOT_FOUND);
+//        return new ResponseEntity<>(expenses,HttpStatus.OK);
+        return null;
     }
 
     @Transactional
@@ -48,14 +96,15 @@ public class ExpenseService {
             throw new ApplicationException("0000","Invalid Expense", HttpStatus.NOT_FOUND);
         splitRepository.deleteSplitDetails(expenseId);
         expense.setExpenseId(existExpense.getExpenseId());
-        expense.setCreatedBy(1);
+//        expense.setCreatedBy(1);
         return new ResponseEntity<>(expenseRepository.save(expense),HttpStatus.OK);
     }
 
     public ResponseEntity<List<Expense>> findExpenseByGroupId(Integer groupId) {
-        List<Expense> expenses = expenseRepository.findByGroupId(groupId);
-        if(expenses.isEmpty())
-            throw new ApplicationException("0000","No expenses found", HttpStatus.NOT_FOUND);
-        return new ResponseEntity<>(expenses,HttpStatus.OK);
+//        List<Expense> expenses = expenseRepository.findByGroupId(groupId);
+//        if(expenses.isEmpty())
+//            throw new ApplicationException("0000","No expenses found", HttpStatus.NOT_FOUND);
+//        return new ResponseEntity<>(expenses,HttpStatus.OK);
+    	return null;
     }
 }

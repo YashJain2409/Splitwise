@@ -1,5 +1,7 @@
 package com.splitwise.model;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -26,7 +28,7 @@ public class ExpensePayer {
 	@JoinColumn(name = "user_id")
 	private User user;
 	
-	private Double amountPaid;
+	private BigDecimal amountPaid;
 	
 	
 }

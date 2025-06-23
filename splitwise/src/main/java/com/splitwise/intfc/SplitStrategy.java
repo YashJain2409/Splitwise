@@ -1,12 +1,11 @@
 package com.splitwise.intfc;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
-import com.splitwise.model.User;
+import com.splitwise.dto.CreateExpenseRequest;
+import com.splitwise.model.Expense;
+import com.splitwise.model.Split;
 
 public interface SplitStrategy {
-	Map<User,BigDecimal> calculateSplits(BigDecimal totalAmount, List<User> participants,
-			Map<User, BigDecimal> userPaidMap,Map<User,BigDecimal> userOwedMap);
+	List<Split> calculateSplits(Expense expense, List<CreateExpenseRequest.SplitDto> splitDtos);
 }

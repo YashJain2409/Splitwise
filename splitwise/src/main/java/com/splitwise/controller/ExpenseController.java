@@ -1,5 +1,6 @@
 package com.splitwise.controller;
 
+import com.splitwise.dto.CreateExpenseRequest;
 import com.splitwise.dto.EmailNotification;
 import com.splitwise.exception.ApplicationException;
 import com.splitwise.model.Expense;
@@ -26,26 +27,9 @@ public class ExpenseController {
     
     
     @PostMapping("/Create")
-    public ResponseEntity<Expense> createExpense(@RequestBody Expense expense) {
-        if(expense.getDescription() == null || expense.getDescription().isEmpty())
-            throw new ApplicationException("0000","Enter Description", HttpStatus.BAD_REQUEST);
-        if(expense.getAmount() == 0)
-            throw new ApplicationException("0001","Enter Amount",HttpStatus.BAD_REQUEST);
-        String validSplitMessage = validateSplit(expense.getSplitDetails(),expense.getAmount());
-        Expense savedExpense = null;
-        if(validSplitMessage.equals("Success")){
-            expense.setCreatedBy(2);
-            savedExpense = expenseService.createExpense(expense);
-            EmailNotification emailNotification = new EmailNotification();
-        	emailNotification.setTo("yashsj24@gmail.com");
-        	emailNotification.setSubject("Expense Created");
-        	emailNotification.setBody("");
-        	notificationsProducer.sendEmailNotification(emailNotification);
-        }
-        else {
-            throw new ApplicationException("0002",validSplitMessage,HttpStatus.BAD_REQUEST);
-        }
-        return new ResponseEntity<>(savedExpense,HttpStatus.CREATED);
+    public ResponseEntity<String> createExpense(@RequestBody CreateExpenseRequest expense) {
+        expenseService.createExpense(expense);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Expense created successfully");
     }
 
     private String validateSplit(List<Split> splitDetails, double amount) {
@@ -54,7 +38,7 @@ public class ExpenseController {
             return "More than one user must be involved in expense";
         }
         for(Split s: splitDetails) {
-            currSum += s.getOweShare();
+//            currSum += s.getOweShare();
         }
         if(currSum == amount)
             return "Success";
@@ -70,13 +54,14 @@ public class ExpenseController {
     public ResponseEntity<Expense> updateExpense(@RequestBody Expense expense, @PathVariable int expenseId) {
         if(expense.getDescription() == null || expense.getDescription().isEmpty())
             throw new ApplicationException("0000","Enter Description", HttpStatus.BAD_REQUEST);
-        if(expense.getAmount() == 0)
-            throw new ApplicationException("0001","Enter Amount",HttpStatus.BAD_REQUEST);
-        String validSplitMessage = validateSplit(expense.getSplitDetails(),expense.getAmount());
-        if(validSplitMessage.equals("Success")){
-            return expenseService.updateExpense(expense,expenseId);
-        }
-        throw new ApplicationException("0002",validSplitMessage,HttpStatus.BAD_REQUEST);
+//        if(expense.getAmount() == 0)
+//            throw new ApplicationException("0001","Enter Amount",HttpStatus.BAD_REQUEST);
+        return null;
+//        String validSplitMessage = validateSplit(expense.getSplitDetails(),expense.getAmount());
+//        if(validSplitMessage.equals("Success")){
+//            return expenseService.updateExpense(expense,expenseId);
+//        }
+//        throw new ApplicationException("0002",validSplitMessage,HttpStatus.BAD_REQUEST);
     }
 
     @GetMapping("/GetExpenses")
