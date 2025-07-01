@@ -35,6 +35,7 @@ public class ExpenseService {
     UserRepository userRepository;
     GroupRepository groupRepository;
     StrategyFactoryRegistry strategyFactoryRegistry;
+    BalanceService balanceService;
     
     
 
@@ -43,8 +44,9 @@ public class ExpenseService {
         
      // Save expense
         Expense expense = new Expense();
+        Group group = null;
         if (expenseReq.getGroupId() != null) {
-            Group group = groupRepository.findById(expenseReq.getGroupId()).orElseThrow();
+            group = groupRepository.findById(expenseReq.getGroupId()).orElseThrow();
             expense.setGroup(group);
         }
         expense.setCreatedBy(createdBy);
@@ -66,9 +68,8 @@ public class ExpenseService {
         List<Split> expenseSplit = strategy.calculateSplits(expense, expenseReq.getSplits()); 
         splitRepository.saveAll(expenseSplit);
         
-        // update group balances.
-        
-        // update global balances.
+        // update balance
+        balanceService.updateBalances(payers,expenseSplit,group);
         
     }
 

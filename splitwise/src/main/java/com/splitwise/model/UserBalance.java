@@ -16,6 +16,7 @@ public class UserBalance {
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+    
 
     @ManyToOne
     @JoinColumn(name = "user1_id")
