@@ -41,8 +41,6 @@ public class EqualSplitStrategy implements SplitStrategy {
 	}
 
 
-	public EqualSplitStrategy() {
-		// TODO Auto-generated constructor stub
-	}
+	
 	
 }

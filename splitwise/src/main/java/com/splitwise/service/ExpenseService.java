@@ -1,6 +1,7 @@
 package com.splitwise.service;
 
 import com.splitwise.dto.CreateExpenseRequest;
+import com.splitwise.dto.CreateExpenseRequest.PayerDto;
 import com.splitwise.exception.ApplicationException;
 import com.splitwise.intfc.SplitStrategy;
 import com.splitwise.model.Expense;
@@ -22,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -43,6 +45,15 @@ public class ExpenseService {
 
     public void createExpense(CreateExpenseRequest expenseReq) {
 //    	System.out.println(expenseReq.getCreatedByUserId());
+    	
+    	// validate payment
+    	BigDecimal sumOfPayerAmounts = expenseReq.getPayers().stream()
+    		    .map(PayerDto::getAmountPaid)
+    		    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    		if (sumOfPayerAmounts.compareTo(expenseReq.getAmount()) != 0) {
+    		    throw new IllegalArgumentException("Sum of payer amounts must equal total expense amount");
+    		}
         User createdBy = userRepository.findById(expenseReq.getCreatedBy()).orElseThrow();
         
      // Save expense
