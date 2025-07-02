@@ -9,6 +9,7 @@ import com.splitwise.model.Group;
 import com.splitwise.model.Split;
 import com.splitwise.model.User;
 import com.splitwise.registry.StrategyFactoryRegistry;
+import com.splitwise.repository.ExpensePayerRepository;
 import com.splitwise.repository.ExpenseRepository;
 import com.splitwise.repository.GroupRepository;
 import com.splitwise.repository.SplitRepository;
@@ -30,17 +31,19 @@ import java.util.List;
 public class ExpenseService {
 
 
-    ExpenseRepository expenseRepository;
-    SplitRepository splitRepository;
-    UserRepository userRepository;
-    GroupRepository groupRepository;
-    StrategyFactoryRegistry strategyFactoryRegistry;
-    BalanceService balanceService;
+    final ExpenseRepository expenseRepository;
+    final SplitRepository splitRepository;
+    final UserRepository userRepository;
+    final GroupRepository groupRepository;
+    final StrategyFactoryRegistry strategyFactoryRegistry;
+    final ExpensePayerRepository payerRepository;
+    final BalanceService balanceService;
     
     
 
     public void createExpense(CreateExpenseRequest expenseReq) {
-        User createdBy = userRepository.findById(expenseReq.getCreatedByUserId()).orElseThrow();
+//    	System.out.println(expenseReq.getCreatedByUserId());
+        User createdBy = userRepository.findById(expenseReq.getCreatedBy()).orElseThrow();
         
      // Save expense
         Expense expense = new Expense();
@@ -63,7 +66,7 @@ public class ExpenseService {
         	payer.setAmountPaid(p.getAmountPaid());
         	return payer;
         }).toList();
-        
+        payerRepository.saveAll(payers);
         SplitStrategy strategy =  strategyFactoryRegistry.getStrategy(expenseReq.getSplitType());
         List<Split> expenseSplit = strategy.calculateSplits(expense, expenseReq.getSplits()); 
         splitRepository.saveAll(expenseSplit);

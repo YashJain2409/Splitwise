@@ -19,12 +19,12 @@ public class UserBalance {
     
 
     @ManyToOne
-    @JoinColumn(name = "user1_id")
-    private User user1;
+    @JoinColumn(name = "from_user_id")
+    private User fromUser;
 
     @ManyToOne
-    @JoinColumn(name = "user2_id")
-    private User user2;
+    @JoinColumn(name = "to_user_id")
+    private User toUser;
 
     @ManyToOne
     @JoinColumn(name = "group_id", nullable = true)

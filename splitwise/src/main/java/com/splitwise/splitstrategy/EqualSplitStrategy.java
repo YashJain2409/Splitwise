@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.splitwise.dto.CreateExpenseRequest;
@@ -17,10 +18,13 @@ import com.splitwise.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 public class EqualSplitStrategy implements SplitStrategy {
 	
 	UserRepository userRepository;
+	
+	public EqualSplitStrategy(UserRepository userRepository) {
+		this.userRepository = userRepository;
+	}
 	
 
 	@Override
@@ -34,6 +38,11 @@ public class EqualSplitStrategy implements SplitStrategy {
 			split.setUser(userRepository.findById(s.getUserId()).orElseThrow());
 			return split;
 		}).toList();
+	}
+
+
+	public EqualSplitStrategy() {
+		// TODO Auto-generated constructor stub
 	}
 	
 }

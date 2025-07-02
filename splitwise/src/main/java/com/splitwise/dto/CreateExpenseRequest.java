@@ -12,7 +12,7 @@ public class CreateExpenseRequest {
     private BigDecimal amount;
     private LocalDateTime createdAt;
     private Integer groupId;
-    private int createdByUserId;
+    private int createdBy;
     private String splitType; // EQUAL, UNEQUAL, PERCENTAGE
 
     private List<PayerDto> payers;

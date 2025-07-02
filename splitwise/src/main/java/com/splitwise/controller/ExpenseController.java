@@ -8,6 +8,8 @@ import com.splitwise.model.Split;
 import com.splitwise.service.ExpenseService;
 import com.splitwise.service.NotificationsProducer;
 
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,12 +19,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/Expense")
+@RequiredArgsConstructor
 public class ExpenseController {
-    @Autowired
-    ExpenseService expenseService;
+
+    final ExpenseService expenseService;
     
-    @Autowired
-    NotificationsProducer notificationsProducer;
+    
+    final NotificationsProducer notificationsProducer;
     
     
     
