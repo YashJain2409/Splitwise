@@ -2,6 +2,7 @@ package com.splitwise.service;
 
 import com.splitwise.dto.CreateExpenseRequest;
 import com.splitwise.dto.CreateExpenseRequest.PayerDto;
+import com.splitwise.enums.ExpenseSplitType;
 import com.splitwise.exception.ApplicationException;
 import com.splitwise.intfc.SplitStrategy;
 import com.splitwise.model.Expense;
@@ -65,6 +66,7 @@ public class ExpenseService {
         }
         expense.setCreatedBy(createdBy);
         expense.setCreatedAt(LocalDateTime.now());
+        expense.setExpenseSplitType(ExpenseSplitType.valueOf(expenseReq.getSplitType()));
         expense.setAmount(expenseReq.getAmount());
         expense.setDescription(expenseReq.getDescription());
         expenseRepository.save(expense);

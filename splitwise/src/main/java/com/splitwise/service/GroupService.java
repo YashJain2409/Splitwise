@@ -4,58 +4,79 @@ import com.splitwise.dto.Members;
 import com.splitwise.dto.GroupDTO;
 import com.splitwise.exception.ApplicationException;
 import com.splitwise.model.Group;
+import com.splitwise.model.GroupMember;
 import com.splitwise.model.User;
+import com.splitwise.repository.GroupMemberRepository;
 import com.splitwise.repository.GroupRepository;
 import com.splitwise.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class GroupService {
-    @Autowired
-    GroupRepository groupRepository;
 
-    @Autowired
-    UserRepository userRepository;
-    public Group CreateGroup(GroupDTO createGroupDTO) {
+	final GroupRepository groupRepository;
+
+
+    final UserRepository userRepository;
+    
+    final GroupMemberRepository groupMemberRepository;
+    
+    public void CreateGroup(GroupDTO createGroupDTO) {
+    	User creator = userRepository.findById(createGroupDTO.getCreatedBy()).orElseThrow();
         Group g = new Group();
         g.setGroupName(createGroupDTO.getName());
-        List<String> emails = new ArrayList<>();
-        for(Members a : createGroupDTO.getAttributes()) {
-            emails.add(a.getEmail());
+        g.setCreatedBy(creator);
+        g.setCreatedAt(LocalDateTime.now());
+        
+        groupRepository.save(g);
+        
+        
+        
+        for(int userIds : createGroupDTO.getGroupMemberIds()) {
+        	User u = userRepository.findById(userIds).orElseThrow();
+
+            GroupMember groupMember = new GroupMember();
+            groupMember.setGroup(g);
+            groupMember.setUser(u);
+            groupMemberRepository.save(groupMember);
+            
         }
-        List<User> users = userRepository.findByEmailIn(emails);
-//        g.setUsers(users);
-        return groupRepository.save(g);
+        
     }
 
-    public ResponseEntity<String> deleteGroupById(int groupId) {
-        boolean isFound = groupRepository.existsById(groupId);
-        if(!isFound) {
-            throw new ApplicationException("0000","Group does not exist", HttpStatus.NOT_FOUND);
-        }
-        groupRepository.deleteById(groupId);
-        return new ResponseEntity<>("SUCCESS",HttpStatus.OK);
+    public void deleteGroupById(int groupId) {
+    	Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+
+        group.setDeleted(true);
+        groupRepository.save(group);
     }
 
-    public Group UpdateGroup(GroupDTO groupDTO, int groupId) {
-        Group group = groupRepository.findById(groupId).orElse(null);
-        if(group != null) {
-            group.setGroupName(groupDTO.getName());
-            List<String> emails = new ArrayList<>();
-            for(Members a : groupDTO.getAttributes()) {
-                emails.add(a.getEmail());
-            }
-            List<User> users = userRepository.findByEmailIn(emails);
-//            group.setUsers(users);
-            return groupRepository.save(group);
-        }
-        throw new ApplicationException("0000","Group does not exist", HttpStatus.NOT_FOUND);
-    }
+//    public Group UpdateGroup(GroupDTO groupDTO, int groupId) {
+//        Group group = groupRepository.findById(groupId).orElse(null);
+//        if(group != null) {
+//            group.setGroupName(groupDTO.getName());
+//            List<String> emails = new ArrayList<>();
+//            for(Members a : groupDTO.getAttributes()) {
+//                emails.add(a.getEmail());
+//            }
+//            List<User> users = userRepository.findByEmailIn(emails);
+////            group.setUsers(users);
+//            return groupRepository.save(group);
+//        }
+//        throw new ApplicationException("0000","Group does not exist", HttpStatus.NOT_FOUND);
+//    }
 }

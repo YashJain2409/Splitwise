@@ -21,30 +21,33 @@ public class GroupController {
     GroupService groupService;
 
     @PostMapping("/Create")
-    public ResponseEntity<Group> CreateGroup(@RequestBody GroupDTO createGroupDTO) {
+    public ResponseEntity<String> CreateGroup(@RequestBody GroupDTO createGroupDTO) {
         if(createGroupDTO.getName().isEmpty())
             throw new ApplicationException("0000","Group name cannot be empty", HttpStatus.BAD_REQUEST);
-        List<Members> attributes = createGroupDTO.getAttributes();
-        if(attributes.size() < 2) {
+        List<Integer> groupMembers = createGroupDTO.getGroupMemberIds();
+        
+        if(groupMembers != null && groupMembers.size() < 2) {
             throw new ApplicationException("0001","Users must be greater than 2",HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(groupService.CreateGroup(createGroupDTO),HttpStatus.CREATED);
+        groupService.CreateGroup(createGroupDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Group created successfully.");
     }
 
     @DeleteMapping("/Delete/{groupId}")
     public ResponseEntity<String> DeleteGroup(@PathVariable int groupId) {
-        return groupService.deleteGroupById(groupId);
+        groupService.deleteGroupById(groupId);
+        return ResponseEntity.status(HttpStatus.OK).body("Group deleted successfully");
     }
 
-    @PostMapping("/{groupId}")
-    public ResponseEntity<Group> UpdateGroup(@RequestBody GroupDTO groupDTO,@PathVariable("groupId") int groupId) {
-        if(groupDTO.getName().isEmpty())
-            throw new ApplicationException("0000","Group name cannot be empty", HttpStatus.BAD_REQUEST);
-        List<Members> attributes = groupDTO.getAttributes();
-        if(attributes.size() < 2) {
-            throw new ApplicationException("0001","Users must be greater than 2",HttpStatus.BAD_REQUEST);
-        }
-        return new ResponseEntity<>(groupService.UpdateGroup(groupDTO,groupId),HttpStatus.OK);
-
-    }
+//    @PostMapping("/{groupId}")
+//    public ResponseEntity<Group> UpdateGroup(@RequestBody GroupDTO groupDTO,@PathVariable("groupId") int groupId) {
+//        if(groupDTO.getName().isEmpty())
+//            throw new ApplicationException("0000","Group name cannot be empty", HttpStatus.BAD_REQUEST);
+//        List<Members> attributes = groupDTO.getAttributes();
+//        if(attributes.size() < 2) {
+//            throw new ApplicationException("0001","Users must be greater than 2",HttpStatus.BAD_REQUEST);
+//        }
+//        return new ResponseEntity<>(groupService.UpdateGroup(groupDTO,groupId),HttpStatus.OK);
+//
+//    }
 }

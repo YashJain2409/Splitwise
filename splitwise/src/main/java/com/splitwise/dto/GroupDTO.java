@@ -7,5 +7,6 @@ import java.util.List;
 @Data
 public class GroupDTO {
     String name;
-    List<Members> attributes;
+    int createdBy;
+    List<Integer> groupMemberIds;
 }

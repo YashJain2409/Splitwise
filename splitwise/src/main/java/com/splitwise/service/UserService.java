@@ -4,6 +4,9 @@ import com.splitwise.dto.UpdateUserProfile;
 import com.splitwise.exception.ApplicationException;
 import com.splitwise.model.User;
 import com.splitwise.repository.UserRepository;
+
+import java.time.LocalDateTime;
+
 import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,15 +27,12 @@ public class UserService {
         }
         if(user == null)
             throw new ApplicationException("0001","User not found",HttpStatus.NOT_FOUND);
-        if(userDetails.getName() != null && !userDetails.getName().isEmpty()) {
-            user.setName(userDetails.getName());
-        }
-        if(userDetails.getEmail() != null && !userDetails.getEmail().isEmpty() && EmailValidator.getInstance().isValid(userDetails.getEmail())) {
-            user.setEmail(userDetails.getEmail());
-        }
-        if(userDetails.getPic() != null && !userDetails.getPic().isEmpty()) {
-            user.setProfilePic(userDetails.getPic());
-        }
+        if(userDetails.getName() != null && !userDetails.getName().isEmpty()) user.setName(userDetails.getName());
+        if(userDetails.getEmail() != null && !userDetails.getEmail().isEmpty() && EmailValidator.getInstance().isValid(userDetails.getEmail())) user.setEmail(userDetails.getEmail());
+        if(userDetails.getPic() != null && !userDetails.getPic().isEmpty()) user.setProfilePic(userDetails.getPic());
+        
+        if (userDetails.getNewPassword() != null && !userDetails.getNewPassword().isEmpty()) user.setPassword(userDetails.getNewPassword());
+        user.setUpdateOn(LocalDateTime.now());
         try {
             userRepository.save(user);
         } catch (Exception e) {

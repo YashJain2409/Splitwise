@@ -1,5 +1,6 @@
 package com.splitwise.model;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -23,6 +24,11 @@ public class User {
     private String name;
     @Column(name = "profile_pic")
     private String profilePic;
+    
+    @Column(name = "created_on")
+    private LocalDateTime createdOn;
+    @Column(name = "updated_on")
+    private LocalDateTime updateOn;
     
     @Override
     public boolean equals(Object o) {

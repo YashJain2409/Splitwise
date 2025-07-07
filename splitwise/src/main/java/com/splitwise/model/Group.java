@@ -22,6 +22,9 @@ public class Group {
     @JoinColumn(name = "created_by")
     private User createdBy;
     
+    @Column(name = "deleted")
+    private boolean deleted = false;
+    
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
