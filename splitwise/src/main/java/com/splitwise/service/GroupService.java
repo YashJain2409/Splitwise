@@ -65,18 +65,13 @@ public class GroupService {
         groupRepository.save(group);
     }
 
-//    public Group UpdateGroup(GroupDTO groupDTO, int groupId) {
-//        Group group = groupRepository.findById(groupId).orElse(null);
-//        if(group != null) {
-//            group.setGroupName(groupDTO.getName());
-//            List<String> emails = new ArrayList<>();
-//            for(Members a : groupDTO.getAttributes()) {
-//                emails.add(a.getEmail());
-//            }
-//            List<User> users = userRepository.findByEmailIn(emails);
-////            group.setUsers(users);
-//            return groupRepository.save(group);
-//        }
-//        throw new ApplicationException("0000","Group does not exist", HttpStatus.NOT_FOUND);
-//    }
+    public void UpdateGroup(String name, int groupId) {
+        Group group = groupRepository.findById(groupId).orElse(null);
+        if(group != null) {
+            group.setGroupName(name);
+            groupRepository.save(group);
+        }
+        else
+        	throw new ApplicationException("0000","Group does not exist", HttpStatus.NOT_FOUND);
+    }
 }

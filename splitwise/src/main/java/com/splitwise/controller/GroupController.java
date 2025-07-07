@@ -8,10 +8,12 @@ import com.splitwise.model.Group;
 import com.splitwise.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RequestMapping("/Group")
 @RestController
@@ -38,16 +40,23 @@ public class GroupController {
         groupService.deleteGroupById(groupId);
         return ResponseEntity.status(HttpStatus.OK).body("Group deleted successfully");
     }
+    
+    
 
-//    @PostMapping("/{groupId}")
-//    public ResponseEntity<Group> UpdateGroup(@RequestBody GroupDTO groupDTO,@PathVariable("groupId") int groupId) {
-//        if(groupDTO.getName().isEmpty())
-//            throw new ApplicationException("0000","Group name cannot be empty", HttpStatus.BAD_REQUEST);
-//        List<Members> attributes = groupDTO.getAttributes();
-//        if(attributes.size() < 2) {
-//            throw new ApplicationException("0001","Users must be greater than 2",HttpStatus.BAD_REQUEST);
-//        }
-//        return new ResponseEntity<>(groupService.UpdateGroup(groupDTO,groupId),HttpStatus.OK);
-//
-//    }
+    @PostMapping("/{groupId}")
+    public ResponseEntity<String> UpdateGroup(@RequestBody Map<String,String> req,@PathVariable("groupId") int groupId) {
+        if(!req.containsKey("name") || req.get("name").isEmpty())
+            throw new ApplicationException("0000","Group name cannot be empty", HttpStatus.BAD_REQUEST);
+        String name = req.get("name");
+        groupService.UpdateGroup(name,groupId);
+        return ResponseEntity.status(HttpStatus.OK).body("Updated group successfully");
+
+    }
+    
+    @PostMapping("AddMembers/{groupId}")
+    public ResponseEntity<String> AddMembers() {
+        // TODO : Add members to group
+    	return null;
+    }
+
 }
