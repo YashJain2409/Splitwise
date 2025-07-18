@@ -49,9 +49,10 @@ public class ExpenseController {
         return "Total of everyone's owed share (" + currSum + ") is different than total cost (" + amount + ")";
     }
 
-    @DeleteMapping("/Delete/{expenseId}")
+    @DeleteMapping("/{expenseId}")
     public ResponseEntity<String> deleteExpense(@PathVariable int expenseId) {
-        return expenseService.deleteExpense(expenseId);
+        expenseService.deleteExpense(expenseId);
+        return ResponseEntity.ok("Expense deleted successfully");
     }
 
     @PostMapping("/Update/{expenseId}")

@@ -90,13 +90,11 @@ public class ExpenseService {
         
     }
 
-    public ResponseEntity<String> deleteExpense(int expenseId) {
-        boolean isFound = expenseRepository.existsById(expenseId);
-        if(!isFound) {
-            throw new ApplicationException("0000","Expense not found", HttpStatus.NOT_FOUND);
-        }
-        expenseRepository.deleteById(expenseId);
-        return new ResponseEntity<>("SUCCESS",HttpStatus.OK);
+    public void deleteExpense(int expenseId) {
+        Expense e = expenseRepository.findById(expenseId).orElseThrow();
+        
+        e.setDeleted(true);
+        expenseRepository.save(e);
     }
 
     public ResponseEntity<List<Expense>> getExpenseByFriendId(Integer friendId,int userId) {

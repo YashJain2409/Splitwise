@@ -22,6 +22,8 @@ public class Expense {
     private String description;
     @Column(name = "amount")
     private BigDecimal amount;
+    @Column(name = "deleted")
+    private Boolean deleted = false;
     @Column(name = "split_type")
     @Enumerated(EnumType.STRING)
     private ExpenseSplitType expenseSplitType;
