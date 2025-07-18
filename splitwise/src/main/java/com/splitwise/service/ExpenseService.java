@@ -2,6 +2,8 @@ package com.splitwise.service;
 
 import com.splitwise.dto.CreateExpenseRequest;
 import com.splitwise.dto.CreateExpenseRequest.PayerDto;
+import com.splitwise.dto.ExpenseDetailResponse;
+import com.splitwise.dto.SplitDto;
 import com.splitwise.enums.ExpenseSplitType;
 import com.splitwise.exception.ApplicationException;
 import com.splitwise.intfc.SplitStrategy;
@@ -45,7 +47,6 @@ public class ExpenseService {
     
 
     public void createExpense(CreateExpenseRequest expenseReq) {
-//    	System.out.println(expenseReq.getCreatedByUserId());
     	
     	// validate payment
     	BigDecimal sumOfPayerAmounts = expenseReq.getPayers().stream()
@@ -124,4 +125,14 @@ public class ExpenseService {
 //        return new ResponseEntity<>(expenses,HttpStatus.OK);
     	return null;
     }
+
+	public List<ExpenseDetailResponse> getPersonalExpenses(int userId) {
+		List<Expense> expenses = expenseRepository.findAllPersonalExpenses(userId);
+		return expenses.stream().map(e -> {
+			List<com.splitwise.dto.PayerDto> payers = e.getPayers().stream().map(p -> new com.splitwise.dto.PayerDto(p.getUser().getUserId(), p.getUser().getName(), p.getAmountPaid())).toList();
+			List<SplitDto> splits = e.getSplits().stream().map(s -> new SplitDto(s.getUser().getUserId() ,s.getUser().getName() , s.getAmount())).toList();
+		
+			return new ExpenseDetailResponse(e, payers, splits);
+		}).toList();
+	}
 }

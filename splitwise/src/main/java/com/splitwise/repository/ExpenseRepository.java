@@ -1,6 +1,8 @@
 package com.splitwise.repository;
 
 import com.splitwise.model.Expense;
+import com.splitwise.model.User;
+
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -10,8 +12,8 @@ import java.util.List;
 @Repository
 public interface ExpenseRepository extends CrudRepository<Expense,Integer> {
 
-//    @Query("select e from expense e where (e.createdBy=:id and e.friendUserId=:friendId) or (e.createdBy=:friendId and e.friendUserId=:id)")
-//    List<Expense> getExpenseByFriendId(Integer friendId, int id);
-
-//    List<Expense> findByGroupId(Integer groupId);
+	@Query("select e from Expense e join e.splits s where e.group is null and s.user.id=:userId")
+	List<Expense> findAllPersonalExpenses(int userId);
+	
+		
 }

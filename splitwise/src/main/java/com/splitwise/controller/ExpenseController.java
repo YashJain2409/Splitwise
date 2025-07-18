@@ -2,6 +2,7 @@ package com.splitwise.controller;
 
 import com.splitwise.dto.CreateExpenseRequest;
 import com.splitwise.dto.EmailNotification;
+import com.splitwise.dto.ExpenseDetailResponse;
 import com.splitwise.exception.ApplicationException;
 import com.splitwise.model.Expense;
 import com.splitwise.model.Split;
@@ -67,14 +68,10 @@ public class ExpenseController {
 //        throw new ApplicationException("0002",validSplitMessage,HttpStatus.BAD_REQUEST);
     }
 
-    @GetMapping("/GetExpenses")
-    public ResponseEntity<List<Expense>> getExpenseByFilter(@RequestParam(required = false) Integer friendId,@RequestParam(required = false) Integer groupId) {
-        int userId = 1;
-        System.out.println(friendId + " " + groupId);
-        if(groupId != null)
-            return expenseService.findExpenseByGroupId(groupId);
-
-        return expenseService.getExpenseByFriendId(friendId,userId);
+    @GetMapping("/{userId}/personal")
+    public ResponseEntity<List<ExpenseDetailResponse>> getExpenseByFilter(@PathVariable int userId) {
+        List<ExpenseDetailResponse> expenses = expenseService.getPersonalExpenses(userId);
+    	return ResponseEntity.ok(expenses);
     }
 
 
