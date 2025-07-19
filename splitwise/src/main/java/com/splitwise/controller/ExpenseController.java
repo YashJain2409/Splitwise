@@ -36,18 +36,6 @@ public class ExpenseController {
         return ResponseEntity.status(HttpStatus.CREATED).body("Expense created successfully");
     }
 
-    private String validateSplit(List<Split> splitDetails, double amount) {
-        double currSum = 0;
-        if(splitDetails == null || splitDetails.size() < 2) {
-            return "More than one user must be involved in expense";
-        }
-        for(Split s: splitDetails) {
-//            currSum += s.getOweShare();
-        }
-        if(currSum == amount)
-            return "Success";
-        return "Total of everyone's owed share (" + currSum + ") is different than total cost (" + amount + ")";
-    }
 
     @DeleteMapping("/{expenseId}")
     public ResponseEntity<String> deleteExpense(@PathVariable int expenseId) {
@@ -72,6 +60,12 @@ public class ExpenseController {
     @GetMapping("/{userId}/personal")
     public ResponseEntity<List<ExpenseDetailResponse>> getExpenseByFilter(@PathVariable int userId) {
         List<ExpenseDetailResponse> expenses = expenseService.getPersonalExpenses(userId);
+    	return ResponseEntity.ok(expenses);
+    }
+    
+    @GetMapping("/groups/{groupId}")
+    public ResponseEntity<List<ExpenseDetailResponse>> getGroupExpenses(@PathVariable int groupId) {
+    	List<ExpenseDetailResponse> expenses = expenseService.getGroupExpenses(groupId);
     	return ResponseEntity.ok(expenses);
     }
 

@@ -92,7 +92,6 @@ public class ExpenseService {
 
     public void deleteExpense(int expenseId) {
         Expense e = expenseRepository.findById(expenseId).orElseThrow();
-        
         e.setDeleted(true);
         expenseRepository.save(e);
     }
@@ -126,6 +125,17 @@ public class ExpenseService {
 
 	public List<ExpenseDetailResponse> getPersonalExpenses(int userId) {
 		List<Expense> expenses = expenseRepository.findAllPersonalExpenses(userId);
+		return expenses.stream().map(e -> {
+			List<com.splitwise.dto.PayerDto> payers = e.getPayers().stream().map(p -> new com.splitwise.dto.PayerDto(p.getUser().getUserId(), p.getUser().getName(), p.getAmountPaid())).toList();
+			List<SplitDto> splits = e.getSplits().stream().map(s -> new SplitDto(s.getUser().getUserId() ,s.getUser().getName() , s.getAmount())).toList();
+		
+			return new ExpenseDetailResponse(e, payers, splits);
+		}).toList();
+	}
+
+	public List<ExpenseDetailResponse> getGroupExpenses(int groupId) {
+		Group g = groupRepository.findById(groupId).orElseThrow();
+		List<Expense> expenses = expenseRepository.findByGroup(g);
 		return expenses.stream().map(e -> {
 			List<com.splitwise.dto.PayerDto> payers = e.getPayers().stream().map(p -> new com.splitwise.dto.PayerDto(p.getUser().getUserId(), p.getUser().getName(), p.getAmountPaid())).toList();
 			List<SplitDto> splits = e.getSplits().stream().map(s -> new SplitDto(s.getUser().getUserId() ,s.getUser().getName() , s.getAmount())).toList();
