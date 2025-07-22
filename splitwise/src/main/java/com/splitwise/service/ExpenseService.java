@@ -35,17 +35,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ExpenseService {
 
-
-    final ExpenseRepository expenseRepository;
-    final SplitRepository splitRepository;
-    final UserRepository userRepository;
-    final GroupRepository groupRepository;
     final StrategyFactoryRegistry strategyFactoryRegistry;
     final ExpensePayerRepository payerRepository;
     final BalanceService balanceService;
     
     
-
+    @Transactional
     public void createExpense(CreateExpenseRequest expenseReq) {
     	
     	// validate payment

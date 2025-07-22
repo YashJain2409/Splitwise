@@ -1,6 +1,8 @@
 package com.splitwise.service;
 
+import com.splitwise.dao.UserDAO;
 import com.splitwise.dto.UpdateUserProfile;
+import com.splitwise.dto.UserDTO;
 import com.splitwise.exception.ApplicationException;
 import com.splitwise.model.User;
 import com.splitwise.repository.UserRepository;
@@ -8,9 +10,11 @@ import com.splitwise.repository.UserRepository;
 import java.time.LocalDateTime;
 
 import org.apache.commons.validator.routines.EmailValidator;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService {
@@ -18,36 +22,30 @@ public class UserService {
     @Autowired
     UserRepository userRepository;
 
-    public void updateProfile(UpdateUserProfile userDetails,int userId) {
-        User user = null;
-        try {
-            user = userRepository.findById(userId).orElse(null);
-        } catch (Exception e) {
-            throw new ApplicationException("0001","error occurred in finding user by id", HttpStatus.INTERNAL_SERVER_ERROR);
+    @Autowired
+    private UserDAO userDAO;
+
+    @Autowired
+    private ModelMapper modelMapper;
+
+
+    public UserDTO updateProfile(UserDTO userDTO,int userId) {
+
+        UserDTO user = userDAO.findById(userId);
+
+        if(!user.getPassword().equals(userDTO.getPassword())){
+            throw new ApplicationException("Current Password is not correct",HttpStatus.BAD_REQUEST);
         }
-        if(user == null)
-            throw new ApplicationException("0001","User not found",HttpStatus.NOT_FOUND);
-        if(userDetails.getName() != null && !userDetails.getName().isEmpty()) user.setName(userDetails.getName());
-        if(userDetails.getEmail() != null && !userDetails.getEmail().isEmpty() && EmailValidator.getInstance().isValid(userDetails.getEmail())) user.setEmail(userDetails.getEmail());
-        if(userDetails.getPic() != null && !userDetails.getPic().isEmpty()) user.setProfilePic(userDetails.getPic());
-        
-        if (userDetails.getNewPassword() != null && !userDetails.getNewPassword().isEmpty()) user.setPassword(userDetails.getNewPassword());
-        user.setUpdateOn(LocalDateTime.now());
-        try {
-            userRepository.save(user);
-        } catch (Exception e) {
-            throw new ApplicationException("0001","error updating user details.", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+
+        userDTO.setPassword(user.getNewPassword());
+
+        return userDAO.saveUser(userDTO);
+
     }
 
+    @Transactional
+    public UserDTO saveUser(UserDTO userDTO) {
 
-    public User saveUser(User user) {
-        User u = null;
-        try {
-            u = userRepository.save(user);
-        }catch (Exception e) {
-            throw new ApplicationException("0001","error saving user details.", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return u;
+        return userDAO.saveUser(userDTO);
     }
 }
