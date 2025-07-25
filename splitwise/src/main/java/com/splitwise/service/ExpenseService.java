@@ -1,9 +1,11 @@
 package com.splitwise.service;
 
+import com.splitwise.dao.UserDAO;
 import com.splitwise.dto.CreateExpenseRequest;
 import com.splitwise.dto.CreateExpenseRequest.PayerDto;
 import com.splitwise.dto.ExpenseDetailResponse;
 import com.splitwise.dto.SplitDto;
+import com.splitwise.dto.UserDTO;
 import com.splitwise.enums.ExpenseSplitType;
 import com.splitwise.exception.ApplicationException;
 import com.splitwise.intfc.SplitStrategy;
@@ -21,6 +23,7 @@ import com.splitwise.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -38,6 +41,8 @@ public class ExpenseService {
     final StrategyFactoryRegistry strategyFactoryRegistry;
     final ExpensePayerRepository payerRepository;
     final BalanceService balanceService;
+    final UserDAO userDAO;
+    final ModelMapper mapper;
     
     
     @Transactional
@@ -51,8 +56,9 @@ public class ExpenseService {
     		if (sumOfPayerAmounts.compareTo(expenseReq.getAmount()) != 0) {
     		    throw new IllegalArgumentException("Sum of payer amounts must equal total expense amount");
     		}
-        User createdBy = userRepository.findById(expenseReq.getCreatedBy()).orElseThrow();
-        
+        UserDTO userDetails = userDAO.findById(expenseReq.getCreatedBy());
+
+        User createdBy = mapper.map(userDetails,User.class);
      // Save expense
         Expense expense = new Expense();
         Group group = null;
