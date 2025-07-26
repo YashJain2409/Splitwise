@@ -6,7 +6,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
-@Entity(name = "split")
+@Entity
+@Table(name = "split")
 public class Split {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

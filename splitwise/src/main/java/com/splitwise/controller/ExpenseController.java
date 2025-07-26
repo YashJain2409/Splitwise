@@ -44,17 +44,9 @@ public class ExpenseController {
     }
 
     @PostMapping("/Update/{expenseId}")
-    public ResponseEntity<Expense> updateExpense(@RequestBody Expense expense, @PathVariable int expenseId) {
-        if(expense.getDescription() == null || expense.getDescription().isEmpty())
-            throw new ApplicationException("0000","Enter Description", HttpStatus.BAD_REQUEST);
-//        if(expense.getAmount() == 0)
-//            throw new ApplicationException("0001","Enter Amount",HttpStatus.BAD_REQUEST);
-        return null;
-//        String validSplitMessage = validateSplit(expense.getSplitDetails(),expense.getAmount());
-//        if(validSplitMessage.equals("Success")){
-//            return expenseService.updateExpense(expense,expenseId);
-//        }
-//        throw new ApplicationException("0002",validSplitMessage,HttpStatus.BAD_REQUEST);
+    public ResponseEntity<String> updateExpense(@RequestBody CreateExpenseRequest expenseReq, @PathVariable int expenseId) {
+        expenseService.updateExpense(expenseReq, expenseId);
+        return ResponseEntity.ok("Expense updated succesfully");
     }
 
     @GetMapping("/{userId}/personal")

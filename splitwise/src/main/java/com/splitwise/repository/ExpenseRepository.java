@@ -16,7 +16,7 @@ public interface ExpenseRepository extends CrudRepository<Expense,Integer> {
 	List<Expense> findAllPersonalExpenses(int userId);
 
 
-	List<Expense> findByGroup(Group g);
+	List<Expense> findByGroupAndDeletedFalse(Group g);
 	
 		
 }
