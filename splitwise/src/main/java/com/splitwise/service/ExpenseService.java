@@ -1,6 +1,6 @@
 package com.splitwise.service;
 
-import com.splitwise.dao.UserDAO;
+import com.splitwise.dao.*;
 import com.splitwise.dto.CreateExpenseRequest;
 import com.splitwise.dto.CreateExpenseRequest.PayerDto;
 import com.splitwise.dto.ExpenseDetailResponse;
@@ -41,8 +41,13 @@ public class ExpenseService {
     final StrategyFactoryRegistry strategyFactoryRegistry;
     final ExpensePayerRepository payerRepository;
     final BalanceService balanceService;
+    final PayersDAO payersDAO;
     final UserDAO userDAO;
     final ModelMapper mapper;
+    final GroupDAO groupDAO;
+    final ExpenseDAO expenseDAO;
+    final ModelMapper modelMapper;
+    final SplitDAO splitDAO;
     
     
     @Transactional
@@ -63,7 +68,7 @@ public class ExpenseService {
         Expense expense = new Expense();
         Group group = null;
         if (expenseReq.getGroupId() != null) {
-            group = groupRepository.findById(expenseReq.getGroupId()).orElseThrow();
+            group = groupDAO.findById(expenseReq.getGroupId());
             expense.setGroup(group);
         }
         expense.setCreatedBy(createdBy);
@@ -71,20 +76,20 @@ public class ExpenseService {
         expense.setExpenseSplitType(ExpenseSplitType.valueOf(expenseReq.getSplitType()));
         expense.setAmount(expenseReq.getAmount());
         expense.setDescription(expenseReq.getDescription());
-        expenseRepository.save(expense);
+        Expense savedExpense = expenseDAO.saveExpense(expense);
         
         // save payers
         List<ExpensePayer> payers = expenseReq.getPayers().stream().map(p -> {
         	ExpensePayer payer = new ExpensePayer();
-        	payer.setExpense(expense);
-        	payer.setUser(userRepository.findById(p.getUserId()).orElseThrow());
+        	payer.setExpense(savedExpense);
+        	payer.setUser(modelMapper.map(userDAO.findById(p.getUserId()),User.class));
         	payer.setAmountPaid(p.getAmountPaid());
         	return payer;
         }).toList();
-        payerRepository.saveAll(payers);
+        payersDAO.saveExpensePayers(payers);
         SplitStrategy strategy =  strategyFactoryRegistry.getStrategy(expenseReq.getSplitType());
-        List<Split> expenseSplit = strategy.calculateSplits(expense, expenseReq.getSplits()); 
-        splitRepository.saveAll(expenseSplit);
+        List<Split> expenseSplit = strategy.calculateSplits(expense, expenseReq.getSplits());
+        splitDAO.saveSplits(expenseSplit);
         
         // update balance
         balanceService.updateBalances(payers,expenseSplit,group);
@@ -92,9 +97,9 @@ public class ExpenseService {
     }
 
     public void deleteExpense(int expenseId) {
-        Expense e = expenseRepository.findById(expenseId).orElseThrow();
+        Expense e = expenseDAO.findExpenseById(expenseId);
         e.setDeleted(true);
-        expenseRepository.save(e);
+        expenseDAO.saveExpense(e);
     }
 
     public ResponseEntity<List<Expense>> getExpenseByFriendId(Integer friendId,int userId) {
@@ -107,13 +112,14 @@ public class ExpenseService {
 
     @Transactional
     public ResponseEntity<Expense> updateExpense(Expense expense,int expenseId) {
-        Expense existExpense = expenseRepository.findById(expenseId).orElse(null);
-        if(existExpense == null)
-            throw new ApplicationException("0000","Invalid Expense", HttpStatus.NOT_FOUND);
-        splitRepository.deleteSplitDetails(expenseId);
+        Expense existExpense = expenseDAO.findExpenseById(expenseId);
+
+        splitDAO.deleteSplitDetails(expenseId);
         expense.setExpenseId(existExpense.getExpenseId());
 //        expense.setCreatedBy(1);
-        return new ResponseEntity<>(expenseRepository.save(expense),HttpStatus.OK);
+        expense =  expenseDAO.saveExpense(expense);
+
+        return new ResponseEntity<>(expense,HttpStatus.OK);
     }
 
     public ResponseEntity<List<Expense>> findExpenseByGroupId(Integer groupId) {
@@ -125,7 +131,7 @@ public class ExpenseService {
     }
 
 	public List<ExpenseDetailResponse> getPersonalExpenses(int userId) {
-		List<Expense> expenses = expenseRepository.findAllPersonalExpenses(userId);
+		List<Expense> expenses = expenseDAO.findAllPersonalExpenses(userId);
 		return expenses.stream().map(e -> {
 			List<com.splitwise.dto.PayerDto> payers = e.getPayers().stream().map(p -> new com.splitwise.dto.PayerDto(p.getUser().getUserId(), p.getUser().getName(), p.getAmountPaid())).toList();
 			List<SplitDto> splits = e.getSplits().stream().map(s -> new SplitDto(s.getUser().getUserId() ,s.getUser().getName() , s.getAmount())).toList();
@@ -135,8 +141,8 @@ public class ExpenseService {
 	}
 
 	public List<ExpenseDetailResponse> getGroupExpenses(int groupId) {
-		Group g = groupRepository.findById(groupId).orElseThrow();
-		List<Expense> expenses = expenseRepository.findByGroup(g);
+		Group g = groupDAO.findById(groupId);
+		List<Expense> expenses = expenseDAO.findByGroup(g);
 		return expenses.stream().map(e -> {
 			List<com.splitwise.dto.PayerDto> payers = e.getPayers().stream().map(p -> new com.splitwise.dto.PayerDto(p.getUser().getUserId(), p.getUser().getName(), p.getAmountPaid())).toList();
 			List<SplitDto> splits = e.getSplits().stream().map(s -> new SplitDto(s.getUser().getUserId() ,s.getUser().getName() , s.getAmount())).toList();
