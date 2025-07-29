@@ -130,5 +130,29 @@ public class BalanceService {
 		
 		return net.entrySet().stream().map(e -> new UserBalanceDTO(e.getKey(), e.getValue())).toList();
 	}
+	
+	public List<UserBalanceDTO> getUserBalancesOutsideGroup(int userId) {
+		User u = userRepository.findById(userId).orElseThrow();
+		List<UserBalance> balances = userBalanceRepository.findBalancesForUserOutsideGroup(userId);
+		Map<String, BigDecimal> net = new HashMap<>();
+		for(UserBalance b : balances) {
+
+			String otherUserName;
+			BigDecimal amount;
+			
+			if(b.getFromUser().getUserId() == userId) {
+				otherUserName = b.getToUser().getName();
+				amount = b.getBalance().negate();
+			}else {
+				otherUserName = b.getFromUser().getName();
+				amount = b.getBalance();
+			}
+			
+			net.put(otherUserName,net.getOrDefault(otherUserName, BigDecimal.ZERO).add(amount));
+			
+		}
+		
+		return net.entrySet().stream().map(e -> new UserBalanceDTO(e.getKey(), e.getValue())).toList();
+	}
 
 }

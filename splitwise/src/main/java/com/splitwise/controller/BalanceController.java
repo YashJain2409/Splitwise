@@ -27,4 +27,10 @@ public class BalanceController {
 		List<UserBalanceDTO> balances = balanceService.getUserBalancesInGroup(userId, groupId);
         return ResponseEntity.ok(balances);
 	}
+	
+	@GetMapping("/{userId}")
+	public ResponseEntity<List<UserBalanceDTO>> getUserBalanceOutsideGroup(@PathVariable int userId) {
+		List<UserBalanceDTO> balances = balanceService.getUserBalancesOutsideGroup(userId);
+        return ResponseEntity.ok(balances);
+	}
 }
