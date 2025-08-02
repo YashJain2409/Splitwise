@@ -32,35 +32,9 @@ public class BalanceService {
 	final UserRepository userRepository;
 
 
-	public void updateBalances(List<ExpensePayer> payers, List<Split> expenseSplit, Group group,boolean reverse) {
-		Map<User,BigDecimal> paid = new HashMap<>();
-		Map<User,BigDecimal> owed = new HashMap<>();
-		System.out.println(payers.size());
-		for(ExpensePayer p : payers) {
-		    paid.merge(p.getUser(), p.getAmountPaid(), BigDecimal::add);
-		    System.out.println("pay " + p.getAmountPaid());
-		}
-		System.out.println("split " + expenseSplit.size());
-		for(Split s : expenseSplit) {
-			owed.merge(s.getUser(), s.getAmount(), BigDecimal::add);
-			System.out.println("split " + s.getAmount());
-		}
-		
-		// Net per user
-        Map<User, BigDecimal> net = new HashMap<>();
-        Set<User> all = new HashSet<>();
-        all.addAll(paid.keySet());
-        all.addAll(owed.keySet());
+	public void updateBalances(Map<User, BigDecimal> net, Group group,boolean reverse) {
 
-        for (User u : all) {
-            BigDecimal userPaid = paid.getOrDefault(u, BigDecimal.ZERO);
-            BigDecimal userOwes = owed.getOrDefault(u, BigDecimal.ZERO);
-            System.out.println("all " + userPaid + " " + userOwes);
-            BigDecimal netAm = reverse ? userPaid.subtract(userOwes).negate() : userPaid.subtract(userOwes);
-            System.out.println(netAm);
-            net.put(u,reverse ? userPaid.subtract(userOwes).negate() : userPaid.subtract(userOwes));
-        }
-        
+
         List<User> creditors = net.entrySet().stream().filter(e -> e.getValue().compareTo(BigDecimal.ZERO) > 0).map(
         		e -> e.getKey()).toList();
         
@@ -83,6 +57,8 @@ public class BalanceService {
         	}
         	
         }
+        
+        
 	}
 
 	private void updateOrInsertBalance(Group group, User from, User to, BigDecimal delta,boolean reverse) {

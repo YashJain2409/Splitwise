@@ -6,19 +6,21 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 import com.splitwise.dto.EmailNotification;
+import com.splitwise.events.NotificationEvent;
 
 
 @Component
 public class NotificationsProducer {
 	
 	@Autowired
-	private KafkaTemplate<String, EmailNotification> kafkaTemplate;
+	private KafkaTemplate<String, NotificationEvent> kafkaTemplate;
 	
-	private static final String Topic = "email-topic";
+	private static final String Topic = "notification-events";
 	
-	public void sendEmailNotification(EmailNotification email) {
-		System.out.println("sending kafka event...");
-		kafkaTemplate.send(Topic, email);
+	public void sendEvent(NotificationEvent event) {
+//		System.out.println("sending kafka event...");
+		System.out.println(event.getEventType());
+		kafkaTemplate.send(Topic, event);
 	}
 
 }
