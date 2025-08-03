@@ -18,7 +18,6 @@ public class ExpenseCreatedEvent extends NotificationEvent {
 	
 	private  String expenseName;
 	private BigDecimal expenseAmount;
-	private  User userDetails;
 	private  BigDecimal owedAmount;
 	private  String createdUserName;
 	
@@ -26,7 +25,6 @@ public class ExpenseCreatedEvent extends NotificationEvent {
 		super(NotificationEventType.EXPENSE_CREATED,userDetails);
 		this.expenseAmount = expenseAmount;
 		this.expenseName = expenseName;
-		this.userDetails = userDetails;
 		this.owedAmount = owedAmount;
 		this.createdUserName = createdUserName;
 	}
