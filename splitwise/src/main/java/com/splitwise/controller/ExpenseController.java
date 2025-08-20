@@ -28,8 +28,6 @@ public class ExpenseController {
     
     final NotificationsProducer notificationsProducer;
     
-    
-    
     @PostMapping("/Create")
     public ResponseEntity<String> createExpense(@RequestBody CreateExpenseRequest expense) {
         expenseService.createExpense(expense);

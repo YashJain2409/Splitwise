@@ -25,7 +25,6 @@ public class UserDAO {
         User user = modelMapper.map(userDTO,User.class);
 
         user.setCreatedOn(LocalDateTime.now());
-
         try {
             user = userRepository.save(user);
         }catch (Exception e) {

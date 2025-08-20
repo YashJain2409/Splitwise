@@ -96,6 +96,7 @@ public class ExpenseService {
         
     }
 
+    @Transactional
     public void deleteExpense(int expenseId) {
         Expense e = expenseDAO.findExpenseById(expenseId);
         e.setDeleted(true);
@@ -130,6 +131,7 @@ public class ExpenseService {
     	return null;
     }
 
+    @Transactional
 	public List<ExpenseDetailResponse> getPersonalExpenses(int userId) {
 		List<Expense> expenses = expenseDAO.findAllPersonalExpenses(userId);
 		return expenses.stream().map(e -> {
@@ -140,6 +142,7 @@ public class ExpenseService {
 		}).toList();
 	}
 
+    @Transactional
 	public List<ExpenseDetailResponse> getGroupExpenses(int groupId) {
 		Group g = groupDAO.findById(groupId);
 		List<Expense> expenses = expenseDAO.findByGroup(g);

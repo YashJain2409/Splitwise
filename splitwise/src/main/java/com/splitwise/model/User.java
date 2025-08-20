@@ -15,16 +15,12 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private int userId;
-    @Column(name = "email")
+    @Column(unique = true,name = "email")
     private String email;
-    @Column(name = "password")
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private String password;
     @Column(name = "name")
     private String name;
     @Column(name = "profile_pic")
     private String profilePic;
-    
     @Column(name = "created_on")
     private LocalDateTime createdOn;
     @Column(name = "updated_on")

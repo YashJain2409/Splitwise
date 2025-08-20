@@ -5,9 +5,11 @@ import com.splitwise.model.Split;
 import com.splitwise.repository.SplitRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Component
 public class SplitDAO {
 
     @Autowired
