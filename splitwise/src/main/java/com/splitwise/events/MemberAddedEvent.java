@@ -4,6 +4,7 @@ import com.splitwise.enums.NotificationEventType;
 import com.splitwise.model.User;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 public class MemberAddedEvent extends NotificationEvent {
@@ -11,10 +12,8 @@ public class MemberAddedEvent extends NotificationEvent {
 	String addedUserName;
 	String addedByUserName;
 	String addedByUserEmail;
+	
 
-	public MemberAddedEvent() {
-		super();
-	}
 	public MemberAddedEvent(String groupName, String addedUserName, String addedByUserName, String addedByUserEmail,User userDetails) {
 		super(NotificationEventType.USER_ADDED_TO_GROUP,userDetails);
 		this.groupName = groupName;

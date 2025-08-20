@@ -9,6 +9,7 @@ import com.splitwise.dto.UserDTO;
 import com.splitwise.enums.ExpenseSplitType;
 import com.splitwise.enums.NotificationEventType;
 import com.splitwise.events.ExpenseCreatedEvent;
+import com.splitwise.events.ExpenseDeletedEvent;
 import com.splitwise.exception.ApplicationException;
 import com.splitwise.intfc.SplitStrategy;
 import com.splitwise.model.Expense;
@@ -44,7 +45,6 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class ExpenseService {
-
 
 	final StrategyFactoryRegistry strategyFactoryRegistry;
 	final ExpensePayerRepository payerRepository;
@@ -82,6 +82,7 @@ public class ExpenseService {
 			expense.setGroup(group);
 		}
 		expense.setCreatedBy(createdBy);
+		expense.setUpdatedBy(createdBy);
 		expense.setCreatedAt(LocalDateTime.now());
 		expense.setExpenseSplitType(ExpenseSplitType.valueOf(expenseReq.getSplitType()));
 		expense.setAmount(expenseReq.getAmount());
@@ -105,11 +106,11 @@ public class ExpenseService {
 		balanceService.updateBalances(net, group, false);
 
 		for (Map.Entry<User, BigDecimal> recipients : net.entrySet()) {
-			if(recipients.getKey().getUserId() == expense.getCreatedBy().getUserId()) 
+			if (recipients.getKey().getUserId() == expense.getCreatedBy().getUserId())
 				continue;
 			ExpenseCreatedEvent expenseCreatedEvent = new ExpenseCreatedEvent(expense.getDescription(),
-					expense.getAmount(), recipients.getValue(), recipients.getKey(),expense.getCreatedBy().getName());
-			
+					expense.getAmount(), recipients.getValue(), recipients.getKey(), expense.getCreatedBy().getName());
+
 			notificationsProducer.sendEvent(expenseCreatedEvent);
 		}
 
@@ -144,9 +145,18 @@ public class ExpenseService {
 	public void deleteExpense(int expenseId) {
 		Expense e = expenseDAO.findExpenseById(expenseId);
 		e.setDeleted(true);
+		List<ExpensePayer> payers = e.getPayers();
+		List<Split> split = e.getSplits();
+		Map<User, BigDecimal> net = createNetMoneyForUser(payers, split, false);
 		expenseDAO.saveExpense(e);
-	}
+		// TODO : change deleted username id to currently logged in user.
+		for (Map.Entry<User, BigDecimal> recipients : net.entrySet()) {
+			ExpenseDeletedEvent expenseDeletedEvent = new ExpenseDeletedEvent(e.getDescription(), e.getAmount(),
+					recipients.getValue(), recipients.getKey(), e.getCreatedBy().getName());
 
+			notificationsProducer.sendEvent(expenseDeletedEvent);
+		}
+	}
 
 	@Transactional
 	public void updateExpense(CreateExpenseRequest expenseReq, int expenseId) {
@@ -158,20 +168,23 @@ public class ExpenseService {
 		}
 
 		Expense ex = expenseRepository.findById(expenseId).orElseThrow();
+		UserDTO userDetails = userDAO.findById(expenseReq.getUpdatedBy());
+
+		User updatedBy = mapper.map(userDetails, User.class);
 
 		Group g = ex.getGroup();
 		if (expenseReq.getGroupId() != null && expenseReq.getGroupId() != g.getGroupId())
 			throw new IllegalArgumentException("Something went wrong");
 
-        Map<User, BigDecimal> net = createNetMoneyForUser(ex.getPayers(), ex.getSplits(), true);
+		Map<User, BigDecimal> net = createNetMoneyForUser(ex.getPayers(), ex.getSplits(), true);
 		balanceService.updateBalances(net, g, true);
 
 		splitRepository.deleteByExpenseId(ex.getExpenseId());
 		payerRepository.deleteByExpenseId(ex.getExpenseId());
 
-
 		ex.setDescription(expenseReq.getDescription());
 		ex.setAmount(expenseReq.getAmount());
+		ex.setUpdatedBy(updatedBy);
 		ex.setExpenseSplitType(ExpenseSplitType.valueOf(expenseReq.getSplitType()));
 		ex.getPayers().clear();
 		ex.getSplits().clear();
@@ -191,7 +204,18 @@ public class ExpenseService {
 		splitRepository.saveAll(expenseSplit);
 
 		Map<User, BigDecimal> netMoney = createNetMoneyForUser(payers, expenseSplit, false);
+
 		balanceService.updateBalances(netMoney, g, false);
+
+		for (Map.Entry<User, BigDecimal> recipients : netMoney.entrySet()) {
+			if (recipients.getKey().getUserId() == ex.getUpdatedBy().getUserId())
+				continue;
+			ExpenseCreatedEvent expenseCreatedEvent = new ExpenseCreatedEvent(ex.getDescription(), ex.getAmount(),
+					recipients.getValue(), recipients.getKey(), ex.getUpdatedBy().getName());
+
+			notificationsProducer.sendEvent(expenseCreatedEvent);
+		}
+
 	}
 
 	public List<ExpenseDetailResponse> getPersonalExpenses(int userId) {

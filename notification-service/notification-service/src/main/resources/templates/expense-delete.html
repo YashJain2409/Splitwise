@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <body style="font-family: Arial, sans-serif; background-color: #f6f6f6; padding: 20px;">
+    <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 20px; border-radius: 5px; box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.05);">
+      
+      <p style="font-size: 16px;">Hey {{userName}}! <strong>{{actorName}}</strong> just added  the expense “<strong>{{expenseTitle}}</strong>” on app.</p>
+
+	   <div style="border: 1px solid #ddd; padding: 20px; margin: 20px 0; position: relative;">
+        <!-- Centered content (add padding-top to avoid overlap with date) -->
+        <div style="text-align: center; padding-top: 40px;">
+          <h2 style="margin: 10px 0; font-size: 24px; color: #333;">{{expenseTitle}}</h2>
+          <p style="font-size: 16px; margin: 5px 0;"><strong>Total:</strong> ₹{{total}}</p>
+          <p style="color: {{owedColor}}; font-weight: bold; font-size: 16px; margin: 10px 0;">{{owedLabel}}</p>
+        </div>
+       </div>
+      
+    </div>
+  </body>
+</html>

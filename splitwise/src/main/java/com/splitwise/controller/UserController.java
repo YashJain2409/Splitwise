@@ -1,5 +1,6 @@
 package com.splitwise.controller;
 
+import com.splitwise.dto.UpdateUserProfile;
 import com.splitwise.dto.UserDTO;
 import com.splitwise.exception.ApplicationException;
 import com.splitwise.service.UserService;
@@ -12,20 +13,23 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/User")
 public class UserController {
 
-    @Autowired
-    UserService userService;
+	@Autowired
+	UserService userService;
 
-    @PostMapping("/signup")
-    public ResponseEntity<UserDTO> registerUser(@RequestBody UserDTO userDetails) {
-        if(userDetails.getName() == null || userDetails.getEmail() == null || userDetails.getPassword() == null || userDetails.getEmail().isEmpty() || userDetails.getName().isEmpty() || userDetails.getPassword().isEmpty()) {
-            throw new ApplicationException("0000","Enter valid user details",HttpStatus.BAD_REQUEST);
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(userService.saveUser(userDetails));
-    }
+	@PostMapping("/signup")
+	public ResponseEntity<UserDTO> registerUser(@RequestBody UserDTO userDetails) {
+		if (userDetails.getName() == null || userDetails.getEmail() == null || userDetails.getPassword() == null
+				|| userDetails.getEmail().isEmpty() || userDetails.getName().isEmpty()
+				|| userDetails.getPassword().isEmpty()) {
+			throw new ApplicationException("0000", "Enter valid user details", HttpStatus.BAD_REQUEST);
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(userService.saveUser(userDetails));
+	}
 
-    @PostMapping("/updateProfile/{id}")
-    public ResponseEntity<UserDTO> updateProfile(@RequestBody UserDTO userDetails, @PathVariable int id) {
+	@PostMapping("/updateProfile/{id}")
+	public ResponseEntity<String> updateProfile(@RequestBody UpdateUserProfile userDetails, @PathVariable int id) {
 
-         return new ResponseEntity<UserDTO>(userService.updateProfile(userDetails,id),HttpStatus.OK);
-    }
+		userService.updateProfile(userDetails, id);
+		return ResponseEntity.ok("User Profile Updated successfully");
+	}
 }

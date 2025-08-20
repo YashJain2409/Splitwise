@@ -13,6 +13,7 @@ public class CreateExpenseRequest {
     private LocalDateTime createdAt;
     private Integer groupId;
     private int createdBy;
+    private int updatedBy;
     private String splitType; // EQUAL, UNEQUAL, PERCENTAGE
 
     private List<PayerDto> payers;

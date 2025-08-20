@@ -1,5 +1,6 @@
 package com.splitwise.dao;
 
+import com.splitwise.dto.UpdateUserProfile;
 import com.splitwise.dto.UserDTO;
 import com.splitwise.exception.ApplicationException;
 import com.splitwise.model.User;

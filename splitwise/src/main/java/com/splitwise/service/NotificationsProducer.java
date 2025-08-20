@@ -19,7 +19,6 @@ public class NotificationsProducer {
 	
 	public void sendEvent(NotificationEvent event) {
 //		System.out.println("sending kafka event...");
-		System.out.println(event.getEventType());
 		kafkaTemplate.send(Topic, event);
 	}
 
