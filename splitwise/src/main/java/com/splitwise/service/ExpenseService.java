@@ -73,6 +73,7 @@ public class ExpenseService {
 		}
 		UserDTO userDetails = userDAO.findById(expenseReq.getCreatedBy());
 
+
 		User createdBy = mapper.map(userDetails, User.class);
 		// Save expense
 		Expense expense = new Expense();
@@ -218,6 +219,7 @@ public class ExpenseService {
 
 	}
 
+    @Transactional
 	public List<ExpenseDetailResponse> getPersonalExpenses(int userId) {
 		List<Expense> expenses = expenseDAO.findAllPersonalExpenses(userId);
 		return expenses.stream().map(e -> {
@@ -232,6 +234,7 @@ public class ExpenseService {
 		}).toList();
 	}
 
+    @Transactional
 	public List<ExpenseDetailResponse> getGroupExpenses(int groupId) {
 		Group g = groupDAO.findById(groupId);
 		List<Expense> expenses = expenseDAO.findByGroup(g);
