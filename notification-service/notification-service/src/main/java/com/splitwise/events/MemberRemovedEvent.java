@@ -17,7 +17,7 @@ public class MemberRemovedEvent extends NotificationEvent {
 
 	public MemberRemovedEvent(String groupName, String addedUserName, String removedByUserName,
 			String removedByUserEmail, User userDetails) {
-		super(NotificationEventType.USER_ADDED_TO_GROUP, userDetails);
+		super(NotificationEventType.USER_REMOVED_FROM_GROUP, userDetails);
 		this.groupName = groupName;
 		this.removedByUserName = removedByUserName;
 		this.removedByUserEmail = removedByUserEmail;

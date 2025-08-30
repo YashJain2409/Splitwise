@@ -17,6 +17,7 @@ import com.splitwise.events.ExpenseCreatedEvent;
 import com.splitwise.events.ExpenseDeletedEvent;
 import com.splitwise.events.ExpenseUpdatedEvent;
 import com.splitwise.events.MemberAddedEvent;
+import com.splitwise.events.MemberRemovedEvent;
 import com.splitwise.events.NotificationEvent;
 import com.splitwise.intfc.NotificationObserver;
 import com.splitwise.model.User;
@@ -64,6 +65,12 @@ public class EmailNotificationObserver implements NotificationObserver {
 				body = buildMemberAddedEmail(memberAddedEvent);
 			}
 		}
+		case USER_REMOVED_FROM_GROUP -> {
+			if (notificationEvent instanceof MemberRemovedEvent memberRemovedEvent) {
+				subject = "Removed from group";
+				body = buildMemberRemovedEmail(memberRemovedEvent);
+			}
+		}
 		}
 
 		sendEmail(notificationEvent.getRecipient().getEmail(), subject, body);
@@ -78,6 +85,21 @@ public class EmailNotificationObserver implements NotificationObserver {
 					.replace("{{actorName}}", memberAddedEvent.getAddedByUserName())
 					.replace("{{actorEmail}}", memberAddedEvent.getAddedByUserEmail())
 					.replace("{{groupName}}", memberAddedEvent.getGroupName());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return html;
+	}
+
+	private String buildMemberRemovedEmail(MemberRemovedEvent memberRemovedEvent) {
+		String html = "";
+		try {
+			ClassPathResource resource = new ClassPathResource("templates/member-removed.html");
+			html = Files.readString(resource.getFile().toPath(), StandardCharsets.UTF_8);
+			html = html.replace("{{userName}}", memberRemovedEvent.getRecipient().getName())
+					.replace("{{actorName}}", memberRemovedEvent.getRemovedByUserName())
+					.replace("{{actorEmail}}", memberRemovedEvent.getRemovedByUserEmail())
+					.replace("{{groupName}}", memberRemovedEvent.getGroupName());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

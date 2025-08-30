@@ -2,6 +2,7 @@ package com.splitwise.model;
 
 import com.splitwise.enums.NotificationEventType;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -25,6 +26,7 @@ public class NotificationPreferences {
 	private User user;
 	
 	@Enumerated(EnumType.STRING)
+	@Column(length = 50, nullable = false)
 	private NotificationEventType notificationEventType;
 	
 	private boolean isEmailEnabled;

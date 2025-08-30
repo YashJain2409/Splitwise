@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 public class EqualStrategyFactory extends ExpenseStrategyFactory {
 
 	final UserRepository userRepository;
-	
+
 	@Override
 	public String getType() {
 		return "EQUAL";

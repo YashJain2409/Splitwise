@@ -11,36 +11,35 @@ import lombok.Data;
 @Entity(name = "user")
 public class User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private int userId;
-    @Column(name = "email")
-    private String email;
-    @Column(name = "password")
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private String password;
-    @Column(name = "name")
-    private String name;
-    @Column(name = "profile_pic")
-    private String profilePic;
-    
-    @Column(name = "created_on")
-    private LocalDateTime createdOn;
-    @Column(name = "updated_on")
-    private LocalDateTime updateOn;
-    
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof User)) return false;
-        User user = (User) o;
-        return Objects.equals(userId, user.userId); 
-    }
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id")
+	private int userId;
+	@Column(name = "email")
+	private String email;
+	@Column(name = "name")
+	private String name;
+	@Column(name = "profile_pic")
+	private String profilePic;
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(userId);
-    }
+	@Column(name = "created_on")
+	private LocalDateTime createdOn;
+	@Column(name = "updated_on")
+	private LocalDateTime updateOn;
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (!(o instanceof User))
+			return false;
+		User user = (User) o;
+		return Objects.equals(userId, user.userId);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(userId);
+	}
 
 }

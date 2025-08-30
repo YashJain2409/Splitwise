@@ -14,29 +14,32 @@ import java.io.IOException;
 
 public class JWTValidationFilter extends OncePerRequestFilter {
 
-    private AuthenticationManager authenticationManager;
-    private JWTUtil jwtUtil;
+	private AuthenticationManager authenticationManager;
+	private JWTUtil jwtUtil;
 
-    public JWTValidationFilter(AuthenticationManager authenticationManager,JWTUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
-        this.authenticationManager = authenticationManager;
-    }
+	public JWTValidationFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil) {
+		this.jwtUtil = jwtUtil;
+		this.authenticationManager = authenticationManager;
+	}
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
 
-        String token = request.getHeader("Authorization");
+		String token = request.getHeader("Authorization");
 
-        if(token!=null){
-        token = token.substring(7);
+		System.out.println("token " + token);
 
-        JWTAuthenticate jwtAuthenticate = new JWTAuthenticate(token);
+		if (token != null) {
+			token = token.substring(7);
 
-        Authentication authentication = authenticationManager.authenticate(jwtAuthenticate);
-        if(authentication.isAuthenticated()){
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
-        }
-        filterChain.doFilter(request,response);
-    }
+			JWTAuthenticate jwtAuthenticate = new JWTAuthenticate(token);
+
+			Authentication authentication = authenticationManager.authenticate(jwtAuthenticate);
+			if (authentication.isAuthenticated()) {
+				SecurityContextHolder.getContext().setAuthentication(authentication);
+			}
+		}
+		filterChain.doFilter(request, response);
+	}
 }
