@@ -1,5 +1,6 @@
 package com.splitwise.security;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,9 +13,13 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import javax.crypto.spec.SecretKeySpec;
 import java.util.List;
 
 @Configuration
@@ -26,6 +31,10 @@ public class SecurityConfig {
 
     @Autowired
     JWTUtil jwtUtil;
+
+    @Autowired
+    private AuthenticationSuccessHandler oAuth2SuccessHandler;
+
 
     @Bean
     public PasswordEncoder getPasswordEncoder() {
@@ -51,11 +60,37 @@ public class SecurityConfig {
         System.out.println("check spring security filter chain");
         JWTAuthFilter jwtAuthFilter = new JWTAuthFilter(authenticationManager,jwtUtil);
         JWTValidationFilter jwtValidationFilter = new JWTValidationFilter(authenticationManager,jwtUtil);
-        http.authorizeHttpRequests(auth -> auth.requestMatchers("/User/signup").permitAll()
+        OAuthValidationFilter oAuthValidationFilter1 = new OAuthValidationFilter(jwtUtil);
+        http.authorizeHttpRequests(auth -> auth.requestMatchers("/User/signup","/auth/**", "/oauth2/**","/error").permitAll()
                 .anyRequest().authenticated())
                 .csrf(csrf->csrf.disable())
+                .oauth2Login(oAuth -> oAuth.loginPage("/oauth2/authorization/google").successHandler(oAuth2SuccessHandler))
+//                .oauth2ResourceServer(oauth2->oauth2.jwt(Customizer.withDefaults()))
+
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(jwtValidationFilter,JWTAuthFilter.class);
+                .addFilterAfter(jwtValidationFilter,JWTAuthFilter.class)
+                .addFilterBefore(oAuthValidationFilter1,UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    String acceptHeader = request.getHeader("Accept");
+                    String authHeader = request.getHeader("Authorization");
+                    if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                        // If client tried with JWT but invalid/missing
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"error\": \"Invalid or missing JWT token\"}");
+                    } else {
+                        // Browser flow → redirect to login
+                        if (acceptHeader != null && acceptHeader.contains("application/json")) {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                        } else {
+                            response.sendRedirect("/login");
+                        }
+                    }
+                })
+        );
         return http.build();
     }
 
@@ -63,5 +98,12 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(){
 
         return new ProviderManager(List.of(daoAuthenticationProvider(),jwtAuthProvider()));
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        return NimbusJwtDecoder.withSecretKey(
+                new SecretKeySpec("mysecretkeymysecretkey".getBytes(), "HmacSHA256")
+        ).build();
     }
 }

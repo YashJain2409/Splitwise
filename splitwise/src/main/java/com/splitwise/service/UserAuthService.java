@@ -19,6 +19,11 @@ public class UserAuthService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
         UserAuth userAuth = userAuthRepository.findByUserEmail(username);
+
+        if (userAuth == null)
+        {
+            throw new UsernameNotFoundException("Username not found");
+        }
         return User.withUsername(userAuth.getUser().getEmail()).password(userAuth.getPassword()).build();
     }
 

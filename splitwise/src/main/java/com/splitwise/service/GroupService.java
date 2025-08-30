@@ -149,7 +149,7 @@ public class GroupService {
 		User u = userRepository.findById(userId).orElseThrow();
 		GroupMember gm = groupMemberDAO.findByGroupAndUser(g, u);
 		groupMemberDAO.deleteGroupMember(gm);
-		MemberRemovedEvent memberRemovedEvent = new MemberRemovedEvent(group.getGroupName(), g.getCreatedBy().getName(),
+		MemberRemovedEvent memberRemovedEvent = new MemberRemovedEvent(g.getGroupName(),null, g.getCreatedBy().getName(),
 				g.getCreatedBy().getEmail(), gm.getUser());
 		notificationsProducer.sendEvent(memberRemovedEvent);
 	}

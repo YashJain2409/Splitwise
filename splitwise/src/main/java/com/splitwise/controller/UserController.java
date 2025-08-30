@@ -25,11 +25,15 @@ public class UserController {
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(userService.saveUser(userDetails));
 	}
-
 	@PostMapping("/updateProfile/{id}")
 	public ResponseEntity<String> updateProfile(@RequestBody UpdateUserProfile userDetails, @PathVariable int id) {
 
 		userService.updateProfile(userDetails, id);
 		return ResponseEntity.ok("User Profile Updated successfully");
+	}
+
+	@GetMapping("/get-data")
+	public String authCheck(){
+		return "Authenticate";
 	}
 }
