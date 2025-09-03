@@ -39,7 +39,7 @@ public class JWTAuthFilter extends OncePerRequestFilter {
         Authentication authentication = authenticationManager.authenticate(authToken);
 
         if(authentication.isAuthenticated()){
-            String token = jwtUtil.generateToken(authentication.getName(),15);
+            String token = jwtUtil.generateToken(authentication.getName(),60);
             response.setHeader("Authorization","Bearer "+token);
         }
     }

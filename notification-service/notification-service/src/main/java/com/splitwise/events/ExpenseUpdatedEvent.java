@@ -10,11 +10,15 @@ import lombok.Data;
 @Data
 public class ExpenseUpdatedEvent extends NotificationEvent {
 
-	private final String expenseName;
-	private final BigDecimal expenseAmount;
-	private final User userDetails;
-	private final BigDecimal owedAmount;
-	private final String createdUserName;
+	private  String expenseName;
+	private  BigDecimal expenseAmount;
+	private  User userDetails;
+	private  BigDecimal owedAmount;
+	private  String createdUserName;
+
+	public ExpenseUpdatedEvent() {
+		super();
+	}
 
 	public ExpenseUpdatedEvent(String expenseName, BigDecimal expenseAmount, BigDecimal owedAmount, User userDetails,
 			String createdUserName) {

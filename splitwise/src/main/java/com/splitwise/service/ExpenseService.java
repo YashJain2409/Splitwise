@@ -10,6 +10,7 @@ import com.splitwise.enums.ExpenseSplitType;
 import com.splitwise.enums.NotificationEventType;
 import com.splitwise.events.ExpenseCreatedEvent;
 import com.splitwise.events.ExpenseDeletedEvent;
+import com.splitwise.events.ExpenseUpdatedEvent;
 import com.splitwise.exception.ApplicationException;
 import com.splitwise.intfc.SplitStrategy;
 import com.splitwise.model.Expense;
@@ -26,6 +27,7 @@ import com.splitwise.repository.SplitRepository;
 import com.splitwise.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -44,6 +46,7 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ExpenseService {
 
 	final StrategyFactoryRegistry strategyFactoryRegistry;
@@ -72,7 +75,6 @@ public class ExpenseService {
 			throw new IllegalArgumentException("Sum of payer amounts must equal total expense amount");
 		}
 		UserDTO userDetails = userDAO.findById(expenseReq.getCreatedBy());
-
 
 		User createdBy = mapper.map(userDetails, User.class);
 		// Save expense
@@ -103,7 +105,7 @@ public class ExpenseService {
 		List<Split> expenseSplit = strategy.calculateSplits(expense, expenseReq.getSplits());
 		splitDAO.saveSplits(expenseSplit);
 		// update balance
-		Map<User, BigDecimal> net = createNetMoneyForUser(payers, expenseSplit, false);
+		Map<User, BigDecimal> net = createNetMoneyForUser(payers, expenseSplit);
 		balanceService.updateBalances(net, group, false);
 
 		for (Map.Entry<User, BigDecimal> recipients : net.entrySet()) {
@@ -117,8 +119,7 @@ public class ExpenseService {
 
 	}
 
-	private Map<User, BigDecimal> createNetMoneyForUser(List<ExpensePayer> payers, List<Split> expenseSplit,
-			boolean reverse) {
+	private Map<User, BigDecimal> createNetMoneyForUser(List<ExpensePayer> payers, List<Split> expenseSplit) {
 		Map<User, BigDecimal> paid = new HashMap<>();
 		Map<User, BigDecimal> owed = new HashMap<>();
 		for (ExpensePayer p : payers) {
@@ -137,8 +138,7 @@ public class ExpenseService {
 		for (User u : all) {
 			BigDecimal userPaid = paid.getOrDefault(u, BigDecimal.ZERO);
 			BigDecimal userOwes = owed.getOrDefault(u, BigDecimal.ZERO);
-			BigDecimal netAm = reverse ? userPaid.subtract(userOwes).negate() : userPaid.subtract(userOwes);
-			net.put(u, reverse ? userPaid.subtract(userOwes).negate() : userPaid.subtract(userOwes));
+			net.put(u, userPaid.subtract(userOwes));
 		}
 		return net;
 	}
@@ -148,7 +148,7 @@ public class ExpenseService {
 		e.setDeleted(true);
 		List<ExpensePayer> payers = e.getPayers();
 		List<Split> split = e.getSplits();
-		Map<User, BigDecimal> net = createNetMoneyForUser(payers, split, false);
+		Map<User, BigDecimal> net = createNetMoneyForUser(payers, split);
 		expenseDAO.saveExpense(e);
 		// TODO : change deleted username id to currently logged in user.
 		for (Map.Entry<User, BigDecimal> recipients : net.entrySet()) {
@@ -177,7 +177,8 @@ public class ExpenseService {
 		if (expenseReq.getGroupId() != null && expenseReq.getGroupId() != g.getGroupId())
 			throw new IllegalArgumentException("Something went wrong");
 
-		Map<User, BigDecimal> net = createNetMoneyForUser(ex.getPayers(), ex.getSplits(), true);
+		Map<User, BigDecimal> net = createNetMoneyForUser(ex.getPayers(), ex.getSplits());
+		System.out.println("reverting old expense");
 		balanceService.updateBalances(net, g, true);
 
 		splitRepository.deleteByExpenseId(ex.getExpenseId());
@@ -204,22 +205,23 @@ public class ExpenseService {
 		List<Split> expenseSplit = strategy.calculateSplits(ex, expenseReq.getSplits());
 		splitRepository.saveAll(expenseSplit);
 
-		Map<User, BigDecimal> netMoney = createNetMoneyForUser(payers, expenseSplit, false);
+		Map<User, BigDecimal> netMoney = createNetMoneyForUser(payers, expenseSplit);
 
+		System.out.println("adding new expense");
 		balanceService.updateBalances(netMoney, g, false);
 
 		for (Map.Entry<User, BigDecimal> recipients : netMoney.entrySet()) {
 			if (recipients.getKey().getUserId() == ex.getUpdatedBy().getUserId())
 				continue;
-			ExpenseCreatedEvent expenseCreatedEvent = new ExpenseCreatedEvent(ex.getDescription(), ex.getAmount(),
+			ExpenseUpdatedEvent expenseUpdatedEvent = new ExpenseUpdatedEvent(ex.getDescription(), ex.getAmount(),
 					recipients.getValue(), recipients.getKey(), ex.getUpdatedBy().getName());
 
-			notificationsProducer.sendEvent(expenseCreatedEvent);
+			notificationsProducer.sendEvent(expenseUpdatedEvent);
 		}
 
 	}
 
-    @Transactional
+	@Transactional
 	public List<ExpenseDetailResponse> getPersonalExpenses(int userId) {
 		List<Expense> expenses = expenseDAO.findAllPersonalExpenses(userId);
 		return expenses.stream().map(e -> {
@@ -234,7 +236,7 @@ public class ExpenseService {
 		}).toList();
 	}
 
-    @Transactional
+	@Transactional
 	public List<ExpenseDetailResponse> getGroupExpenses(int groupId) {
 		Group g = groupDAO.findById(groupId);
 		List<Expense> expenses = expenseDAO.findByGroup(g);
