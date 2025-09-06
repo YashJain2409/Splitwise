@@ -18,7 +18,7 @@ public class ExpenseDeletedEvent extends NotificationEvent {
 
 	public ExpenseDeletedEvent(String expenseName, BigDecimal expenseAmount, BigDecimal owedAmount, User userDetails,
 			String deletedUserName) {
-		super(NotificationEventType.EXPENSE_UPDATED, userDetails);
+		super(NotificationEventType.EXPENSE_DELETED, userDetails);
 		this.expenseAmount = expenseAmount;
 		this.expenseName = expenseName;
 		this.userDetails = userDetails;

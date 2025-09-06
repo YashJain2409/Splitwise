@@ -144,7 +144,7 @@ public class EmailNotificationObserver implements NotificationObserver {
 	private String buildExpenseUpdatedEmail(ExpenseUpdatedEvent notificationEvent) {
 		String html = "";
 		try {
-			ClassPathResource resource = new ClassPathResource("templates/expense-notification.html");
+			ClassPathResource resource = new ClassPathResource("templates/expense-updated.html");
 			html = Files.readString(resource.getFile().toPath(), StandardCharsets.UTF_8);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -164,7 +164,7 @@ public class EmailNotificationObserver implements NotificationObserver {
 	private String buildExpenseDeletedEmail(ExpenseDeletedEvent notificationEvent) {
 		String html = "";
 		try {
-			ClassPathResource resource = new ClassPathResource("templates/expense-notification.html");
+			ClassPathResource resource = new ClassPathResource("templates/expense-delete.html");
 			html = Files.readString(resource.getFile().toPath(), StandardCharsets.UTF_8);
 		} catch (IOException e) {
 			e.printStackTrace();

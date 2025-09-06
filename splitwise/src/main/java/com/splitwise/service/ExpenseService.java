@@ -143,17 +143,25 @@ public class ExpenseService {
 		return net;
 	}
 
-	public void deleteExpense(int expenseId) {
+	public void deleteExpense(int expenseId, String username) {
+		User user = userRepository.findByEmail(username);
 		Expense e = expenseDAO.findExpenseById(expenseId);
+		if (e.getDeleted() == true)
+			throw new ApplicationException("expense already deleted", HttpStatus.BAD_REQUEST);
 		e.setDeleted(true);
 		List<ExpensePayer> payers = e.getPayers();
 		List<Split> split = e.getSplits();
 		Map<User, BigDecimal> net = createNetMoneyForUser(payers, split);
+		Group g = e.getGroup();
 		expenseDAO.saveExpense(e);
-		// TODO : change deleted username id to currently logged in user.
+		// TODO: update net balances for users.
+		balanceService.updateBalances(net, g, true);
 		for (Map.Entry<User, BigDecimal> recipients : net.entrySet()) {
+			if (user.getUserId() == recipients.getKey().getUserId())
+				continue;
+			System.out.println(recipients.getKey().getName());
 			ExpenseDeletedEvent expenseDeletedEvent = new ExpenseDeletedEvent(e.getDescription(), e.getAmount(),
-					recipients.getValue(), recipients.getKey(), e.getCreatedBy().getName());
+					recipients.getValue(), recipients.getKey(), user.getName());
 
 			notificationsProducer.sendEvent(expenseDeletedEvent);
 		}
@@ -239,7 +247,7 @@ public class ExpenseService {
 	@Transactional
 	public List<ExpenseDetailResponse> getGroupExpenses(int groupId) {
 		Group g = groupDAO.findById(groupId);
-		List<Expense> expenses = expenseDAO.findByGroup(g);
+		List<Expense> expenses = expenseRepository.findByGroupAndDeletedFalse(g);
 		return expenses.stream().map(e -> {
 			List<com.splitwise.dto.PayerDto> payers = e.getPayers().stream()
 					.map(p -> new com.splitwise.dto.PayerDto(p.getUser().getUserId(), p.getUser().getName(),

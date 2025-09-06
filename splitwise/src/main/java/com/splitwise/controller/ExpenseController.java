@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -23,41 +24,39 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ExpenseController {
 
-    final ExpenseService expenseService;
-    
-    
-    final NotificationsProducer notificationsProducer;
-    
-    @PostMapping("/Create")
-    public ResponseEntity<String> createExpense(@RequestBody CreateExpenseRequest expense) {
-        expenseService.createExpense(expense);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Expense created successfully");
-    }
+	final ExpenseService expenseService;
 
+	final NotificationsProducer notificationsProducer;
 
-    @DeleteMapping("/{expenseId}")
-    public ResponseEntity<String> deleteExpense(@PathVariable int expenseId) {
-        expenseService.deleteExpense(expenseId);
-        return ResponseEntity.ok("Expense deleted successfully");
-    }
+	@PostMapping("/Create")
+	public ResponseEntity<String> createExpense(@RequestBody CreateExpenseRequest expense) {
+		expenseService.createExpense(expense);
+		return ResponseEntity.status(HttpStatus.CREATED).body("Expense created successfully");
+	}
 
-    @PostMapping("/Update/{expenseId}")
-    public ResponseEntity<String> updateExpense(@RequestBody CreateExpenseRequest expenseReq, @PathVariable int expenseId) {
-        expenseService.updateExpense(expenseReq, expenseId);
-        return ResponseEntity.ok("Expense updated succesfully");
-    }
+	@DeleteMapping("/{expenseId}")
+	public ResponseEntity<String> deleteExpense(@PathVariable int expenseId, Principal principal) {
+		expenseService.deleteExpense(expenseId, principal.getName());
+		return ResponseEntity.ok("Expense deleted successfully");
+	}
 
-    @GetMapping("/{userId}/personal")
-    public ResponseEntity<List<ExpenseDetailResponse>> getExpenseByFilter(@PathVariable int userId) {
-        List<ExpenseDetailResponse> expenses = expenseService.getPersonalExpenses(userId);
-    	return ResponseEntity.ok(expenses);
-    }
-    
-    @GetMapping("/groups/{groupId}")
-    public ResponseEntity<List<ExpenseDetailResponse>> getGroupExpenses(@PathVariable int groupId) {
-    	List<ExpenseDetailResponse> expenses = expenseService.getGroupExpenses(groupId);
-    	return ResponseEntity.ok(expenses);
-    }
+	@PostMapping("/Update/{expenseId}")
+	public ResponseEntity<String> updateExpense(@RequestBody CreateExpenseRequest expenseReq,
+			@PathVariable int expenseId) {
+		expenseService.updateExpense(expenseReq, expenseId);
+		return ResponseEntity.ok("Expense updated succesfully");
+	}
 
+	@GetMapping("/{userId}/personal")
+	public ResponseEntity<List<ExpenseDetailResponse>> getExpenseByFilter(@PathVariable int userId) {
+		List<ExpenseDetailResponse> expenses = expenseService.getPersonalExpenses(userId);
+		return ResponseEntity.ok(expenses);
+	}
+
+	@GetMapping("/groups/{groupId}")
+	public ResponseEntity<List<ExpenseDetailResponse>> getGroupExpenses(@PathVariable int groupId) {
+		List<ExpenseDetailResponse> expenses = expenseService.getGroupExpenses(groupId);
+		return ResponseEntity.ok(expenses);
+	}
 
 }

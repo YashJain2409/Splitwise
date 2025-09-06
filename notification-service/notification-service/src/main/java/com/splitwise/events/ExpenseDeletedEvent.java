@@ -10,15 +10,19 @@ import lombok.Data;
 @Data
 public class ExpenseDeletedEvent extends NotificationEvent {
 
-	private final String expenseName;
-	private final BigDecimal expenseAmount;
-	private final User userDetails;
-	private final BigDecimal owedAmount;
-	private final String deletedUserName;
+	private String expenseName;
+	private BigDecimal expenseAmount;
+	private User userDetails;
+	private BigDecimal owedAmount;
+	private String deletedUserName;
+
+	public ExpenseDeletedEvent() {
+		super();
+	}
 
 	public ExpenseDeletedEvent(String expenseName, BigDecimal expenseAmount, BigDecimal owedAmount, User userDetails,
 			String deletedUserName) {
-		super(NotificationEventType.EXPENSE_UPDATED, userDetails);
+		super(NotificationEventType.EXPENSE_DELETED, userDetails);
 		this.expenseAmount = expenseAmount;
 		this.expenseName = expenseName;
 		this.userDetails = userDetails;

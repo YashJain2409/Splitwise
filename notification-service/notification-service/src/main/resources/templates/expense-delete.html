@@ -8,9 +8,9 @@
 	   <div style="border: 1px solid #ddd; padding: 20px; margin: 20px 0; position: relative;">
         <!-- Centered content (add padding-top to avoid overlap with date) -->
         <div style="text-align: center; padding-top: 40px;">
-          <h2 style="margin: 10px 0; font-size: 24px; color: #333;">{{expenseTitle}}</h2>
-          <p style="font-size: 16px; margin: 5px 0;"><strong>Total:</strong> ₹{{total}}</p>
-          <p style="color: {{owedColor}}; font-weight: bold; font-size: 16px; margin: 10px 0;">{{owedLabel}}</p>
+          <h2 style="margin: 10px 0; font-size: 24px; color: #333; text-decoration: line-through;"">{{expenseTitle}}</h2>
+          <p style="font-size: 16px; margin: 5px 0;text-decoration: line-through;"><strong>Total:</strong> ₹{{total}}</p>
+          <p style="color: {{owedColor}}; font-weight: bold; font-size: 16px; margin: 10px 0;text-decoration: line-through;">{{owedLabel}}</p>
         </div>
        </div>
       

@@ -44,7 +44,5 @@ public class ExpenseDAO {
         return expenseRepository.findAllPersonalExpenses(userId);
     }
 
-    public List<Expense> findByGroup(Group group){
-        return findByGroup(group);
-    }
+    
 }
