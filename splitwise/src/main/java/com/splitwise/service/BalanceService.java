@@ -8,27 +8,34 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import com.splitwise.controller.BalanceController;
+import com.splitwise.dto.TransactionDTO;
 import com.splitwise.dto.UserBalanceDTO;
 import com.splitwise.model.ExpensePayer;
 import com.splitwise.model.Group;
 import com.splitwise.model.Split;
 import com.splitwise.model.User;
 import com.splitwise.model.UserBalance;
+import com.splitwise.repository.GroupRepository;
 import com.splitwise.repository.UserBalanceRepository;
 import com.splitwise.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BalanceService {
 
 	final UserBalanceRepository userBalanceRepository;
 	final UserRepository userRepository;
+	final GroupRepository groupRepository;
 
 	public void updateBalances(Map<User, BigDecimal> net, Group group, boolean reverse) {
 
@@ -69,9 +76,9 @@ public class BalanceService {
 
 	private void updateOrInsertBalance(Group group, User from, User to, BigDecimal delta) {
 		Optional<UserBalance> balance = userBalanceRepository.findByGroupAndFromUserAndToUser(group, from, to);
-		if(!balance.isPresent()) {
-			balance = userBalanceRepository.findByGroupAndFromUserAndToUser(group,to,from);
-			if(balance.isPresent())
+		if (!balance.isPresent()) {
+			balance = userBalanceRepository.findByGroupAndFromUserAndToUser(group, to, from);
+			if (balance.isPresent())
 				delta = delta.negate();
 			System.out.println("inside present " + delta);
 		}
@@ -96,28 +103,83 @@ public class BalanceService {
 		}
 	}
 
-	public List<UserBalanceDTO> getUserBalancesInGroup(int userId, int groupId) {
+	public List<TransactionDTO> getUserBalancesInGroup(int userId, int groupId) {
 		User u = userRepository.findById(userId).orElseThrow();
-		List<UserBalance> balances = userBalanceRepository.findBalancesForUserInGroup(userId, groupId);
-		Map<String, BigDecimal> net = new HashMap<>();
-		for (UserBalance b : balances) {
 
-			String otherUserName;
-			BigDecimal amount;
+		boolean simplifyDebt = groupRepository.findById(groupId).map(Group::isSimplifyDebt).orElse(false);
 
-			if (b.getFromUser().getUserId() == userId) {
-				otherUserName = b.getToUser().getName();
-				amount = b.getBalance().negate();
-			} else {
-				otherUserName = b.getFromUser().getName();
-				amount = b.getBalance();
-			}
+		List<UserBalance> allBalances = userBalanceRepository.findBalancesForGroup(groupId);
 
-			net.put(otherUserName, net.getOrDefault(otherUserName, BigDecimal.ZERO).add(amount));
-
+		Map<User, BigDecimal> net = new HashMap<>();
+		for (UserBalance b : allBalances) {
+			net.put(b.getFromUser(), net.getOrDefault(b.getFromUser(), BigDecimal.ZERO).subtract(b.getBalance()));
+			net.put(b.getToUser(), net.getOrDefault(b.getToUser(), BigDecimal.ZERO).add(b.getBalance()));
 		}
 
-		return net.entrySet().stream().map(e -> new UserBalanceDTO(e.getKey(), e.getValue())).toList();
+		if (!simplifyDebt) {
+			return allBalances.stream().filter(b -> b.getFromUser().getEmail().equals(u.getEmail())
+					|| b.getToUser().getEmail().equals(u.getEmail())).map(b -> {
+						if (b.getFromUser().getEmail().equals(u.getEmail())) {
+							return new TransactionDTO(u.getEmail(), b.getToUser().getEmail(), b.getBalance());
+						} else {
+							return new TransactionDTO(b.getFromUser().getEmail(), u.getEmail(), b.getBalance());
+						}
+					}).toList();
+		}
+
+		List<User> users = new ArrayList<>(net.keySet());
+		List<BigDecimal> amounts = users.stream().map(user -> net.get(user))
+				.collect(Collectors.toCollection(ArrayList::new));
+		log.info("simplifify debit on : " + simplifyDebt);
+		List<TransactionDTO> simplifiedDebts = minimizeTransaction(users, amounts);
+
+		return simplifiedDebts.stream()
+				.filter(tx -> tx.fromUser().equals(u.getEmail()) || tx.toUser().equals(u.getEmail())).toList();
+
+	}
+
+	private List<TransactionDTO> minimizeTransaction(List<User> users, List<BigDecimal> amounts) {
+		List<TransactionDTO> res = new ArrayList<>();
+		backtrack(users, amounts, 0, new ArrayList<>(), res);
+		return res;
+	}
+
+	private void backtrack(List<User> users, List<BigDecimal> amounts, int start, List<TransactionDTO> currDebts,
+			List<TransactionDTO> res) {
+		while (start < users.size() && amounts.get(start).compareTo(BigDecimal.ZERO) == 0) {
+			start++;
+		}
+		if (start == amounts.size()) {
+			if (res.isEmpty() || currDebts.size() < res.size()) {
+				for (int i = 0; i < currDebts.size(); i++) {
+					log.info("curr ele : " + currDebts.get(i));
+				}
+				res.clear();
+				res.addAll(currDebts);
+			}
+			return;
+		}
+		int min = Integer.MAX_VALUE;
+		BigDecimal startBal = amounts.get(start);
+		for (int i = start + 1; i < amounts.size(); i++) {
+			// if one transaction is positive and another is negative then settle them
+			if (startBal.signum() * amounts.get(i).signum() < 0) {
+				BigDecimal settle = startBal.abs().min(amounts.get(i).abs());
+
+				amounts.set(i, amounts.get(i).add(startBal));
+				amounts.set(start, startBal.add(settle.multiply(BigDecimal.valueOf(-startBal.signum()))));
+
+				String from = startBal.signum() < 0 ? users.get(start).getEmail() : users.get(i).getEmail();
+				String to = startBal.signum() < 0 ? users.get(i).getEmail() : users.get(start).getEmail();
+
+				currDebts.add(new TransactionDTO(from, to, settle));
+				backtrack(users, amounts, start + 1, currDebts, res);
+
+				currDebts.remove(currDebts.size() - 1);
+				amounts.set(start, startBal);
+				amounts.set(i, amounts.get(i).add(settle.multiply(BigDecimal.valueOf(startBal.signum()))));
+			}
+		}
 	}
 
 	public List<UserBalanceDTO> getUserBalancesOutsideGroup(int userId) {

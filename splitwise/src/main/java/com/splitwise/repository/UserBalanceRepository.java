@@ -13,13 +13,13 @@ import com.splitwise.model.User;
 import com.splitwise.model.UserBalance;
 
 @Repository
-public interface UserBalanceRepository extends JpaRepository<UserBalance,Integer>{
-	
+public interface UserBalanceRepository extends JpaRepository<UserBalance, Integer> {
+
 	Optional<UserBalance> findByGroupAndFromUserAndToUser(Group group, User from, User to);
 
-	@Query("select ub from UserBalance ub where ub.group.groupId = :groupId and (ub.fromUser.userId = :userId or ub.toUser.userId = :userId)")
-	List<UserBalance> findBalancesForUserInGroup(@Param("userId") int userId, @Param("groupId") int groupId);
-	
+	@Query("select ub from UserBalance ub where ub.group.groupId = :groupId")
+	List<UserBalance> findBalancesForGroup(@Param("groupId") int groupId);
+
 	@Query("select ub from UserBalance ub where ub.group is null and (ub.fromUser.userId = :userId or ub.toUser.userId = :userId)")
 	List<UserBalance> findBalancesForUserOutsideGroup(@Param("userId") int userId);
 }

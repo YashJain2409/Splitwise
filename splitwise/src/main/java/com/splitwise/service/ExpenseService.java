@@ -154,7 +154,6 @@ public class ExpenseService {
 		Map<User, BigDecimal> net = createNetMoneyForUser(payers, split);
 		Group g = e.getGroup();
 		expenseDAO.saveExpense(e);
-		// TODO: update net balances for users.
 		balanceService.updateBalances(net, g, true);
 		for (Map.Entry<User, BigDecimal> recipients : net.entrySet()) {
 			if (user.getUserId() == recipients.getKey().getUserId())
