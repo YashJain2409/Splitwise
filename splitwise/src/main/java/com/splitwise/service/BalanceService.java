@@ -114,6 +114,9 @@ public class BalanceService {
 		for (UserBalance b : allBalances) {
 			net.put(b.getFromUser(), net.getOrDefault(b.getFromUser(), BigDecimal.ZERO).subtract(b.getBalance()));
 			net.put(b.getToUser(), net.getOrDefault(b.getToUser(), BigDecimal.ZERO).add(b.getBalance()));
+			System.out.println(b.getFromUser() + " " + net.get(b.getFromUser()));
+			System.out.println(b.getToUser() + " " + net.get(b.getToUser()));
+			System.out.println(b.getFromUser() + " " + b.getToUser() + " " + b.getBalance());
 		}
 
 		if (!simplifyDebt) {
@@ -128,11 +131,20 @@ public class BalanceService {
 		}
 
 		List<User> users = new ArrayList<>(net.keySet());
+		for (User user : users) {
+			System.out.println(user.getEmail());
+		}
 		List<BigDecimal> amounts = users.stream().map(user -> net.get(user))
 				.collect(Collectors.toCollection(ArrayList::new));
 		log.info("simplifify debit on : " + simplifyDebt);
+		for (BigDecimal a : amounts) {
+			System.out.println("amounts " + a);
+		}
 		List<TransactionDTO> simplifiedDebts = minimizeTransaction(users, amounts);
-
+		for (TransactionDTO t : simplifiedDebts) {
+			System.out.println(t.fromUser() + t.toUser() + t.amount());
+		}
+//		System.out.println("size " + simplifiedDebts.size))
 		return simplifiedDebts.stream()
 				.filter(tx -> tx.fromUser().equals(u.getEmail()) || tx.toUser().equals(u.getEmail())).toList();
 
@@ -161,23 +173,28 @@ public class BalanceService {
 		}
 		int min = Integer.MAX_VALUE;
 		BigDecimal startBal = amounts.get(start);
+
 		for (int i = start + 1; i < amounts.size(); i++) {
 			// if one transaction is positive and another is negative then settle them
 			if (startBal.signum() * amounts.get(i).signum() < 0) {
-				BigDecimal settle = startBal.abs().min(amounts.get(i).abs());
+				System.out.println(users.get(i).getName() + " " + users.get(start).getName());
 
 				amounts.set(i, amounts.get(i).add(startBal));
-				amounts.set(start, startBal.add(settle.multiply(BigDecimal.valueOf(-startBal.signum()))));
-
+//				amounts.set(start, BigDecimal.ZERO);
+				System.out.println(
+						"amount after settlign " + i + " " + amounts.get(i) + " " + start + " " + amounts.get(start));
 				String from = startBal.signum() < 0 ? users.get(start).getEmail() : users.get(i).getEmail();
 				String to = startBal.signum() < 0 ? users.get(i).getEmail() : users.get(start).getEmail();
 
-				currDebts.add(new TransactionDTO(from, to, settle));
+				currDebts.add(new TransactionDTO(from, to, amounts.get(start)));
 				backtrack(users, amounts, start + 1, currDebts, res);
 
 				currDebts.remove(currDebts.size() - 1);
-				amounts.set(start, startBal);
-				amounts.set(i, amounts.get(i).add(settle.multiply(BigDecimal.valueOf(startBal.signum()))));
+//				amounts.set(start, startBal);
+//				System.out.println("settlging " + amounts.get(i) + " " + amounts.get(start));
+				amounts.set(i, amounts.get(i).subtract(startBal));
+				System.out.println("amount after backtracking " + i + " " + amounts.get(i) + " " + start + " "
+						+ amounts.get(start));
 			}
 		}
 	}
