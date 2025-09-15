@@ -36,4 +36,9 @@ public class UserController {
 		userService.updateProfile(userDetails, username);
 		return ResponseEntity.ok("User Profile Updated successfully");
 	}
+
+	@GetMapping("/get-data")
+	public String authCheck() {
+		return "Authenticate";
+	}
 }
